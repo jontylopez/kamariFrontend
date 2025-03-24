@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Kamari Admin</title>
+  <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+  <link rel="stylesheet" href="css/product.css">
+  <style>
+   
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Product Manager</h1>
+    <a href="index.html">← Back to Dashboard</a>
+  </header>
+
+  <main>
+    <form id="productForm">
+      <label for="name">Product Name:</label>
+      <input type="text" id="name" required>
+
+      <label for="gender">Gender:</label>
+      <select id="gender" required>
+        <option value="">-- Select Gender --</option>
+        <option value="male">Male</option>
+        <option value="female">Female</option>
+        <option value="unisex">Unisex</option>
+      </select>
+
+      <label for="type">Type:</label>
+      <select id="type" required>
+        <option value="">-- Select Type --</option>
+        <option value="UpperBody">UpperBody</option>
+        <option value="LowerBody">LowerBody</option>
+        <option value="FullBody">FullBody</option>
+        <option value="UnderGarment">UnderGarment</option>
+        <option value="Article">Article</option>
+      </select>
+
+      <label for="supplier">Supplier:</label>
+      <select id="supplier" required></select>
+
+      <label for="brand">Brand:</label>
+      <select id="brand" required></select>
+
+      <button type="submit">Create Product</button>
+    </form>
+
+    <div id="message"></div>
+
+    <hr>
+
+    <h2>Products</h2>
+    <ul id="productList"></ul>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="js/product.js"></script>
+</body>
+
+</html>
