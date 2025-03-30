@@ -367,3 +367,91 @@ button.delete:hover {
   margin-top: 2px;
 }
 
+/* Restock Modal Styling */
+#restockModal {
+  display: none;
+  position: fixed;
+  z-index: 10000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.6); /* semi-transparent black */
+  justify-content: center;
+  align-items: center;
+}
+
+#restockModal .modal-content {
+  background: #fff;
+  padding: 25px 30px;
+  border-radius: 8px;
+  width: 400px;
+  max-width: 90%;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  font-family: 'Segoe UI', sans-serif;
+  color: #333;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+#restockModal h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #2e3a59;
+  text-align: center;
+}
+
+#restockModal label {
+  font-weight: 600;
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+#restockModal input[type="text"],
+#restockModal input[type="number"] {
+  padding: 10px 12px;
+  font-size: 14px;
+  border: 1.5px solid #ccc;
+  border-radius: 5px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+#restockModal input:focus {
+  border-color: #6a1b9a;
+}
+
+#restockModal .modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 15px;
+  gap: 10px;
+}
+
+#restockModal button {
+  padding: 10px 15px;
+  border: none;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+#restockModal .confirm-btn {
+  background-color: #4caf50;
+  color: #fff;
+}
+
+#restockModal .confirm-btn:hover {
+  background-color: #388e3c;
+}
+
+#restockModal .cancel-btn {
+  background-color: #f44336;
+  color: #fff;
+}
+
+#restockModal .cancel-btn:hover {
+  background-color: #d32f2f;
+}
