@@ -337,14 +337,14 @@ button.delete:hover {
 .label-size,
 .label-price,
 .label-code {
-  margin: 0;
+  margin-top: 1px;
   padding: 0;
   line-height: 1;
   color: #000; /* 🔥 Solid black text */
 }
 
 .label-product {
-  font-size: 11px;
+  font-size: 14px;
   font-weight: bold;
   margin-bottom: 2px;
 }
@@ -355,7 +355,7 @@ button.delete:hover {
 }
 
 .label-price {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: bold;
   margin-bottom: 2px;
 }
