@@ -75,8 +75,8 @@
         <tbody id="inventoryTableBody"></tbody>
       </table>
     </section>
- <!-- Barcode Download Modal -->
- <div id="barcodeDownloadModal" class="modal">
+<!-- Barcode Download Modal -->
+<div id="barcodeDownloadModal" class="modal">
     <div class="modal-content">
       <span class="close" onclick="closeDownloadModal()">&times;</span>
       <h3>Barcode Label Preview</h3>
@@ -87,13 +87,14 @@
       </div>
   
       <div id="labelPreviewArea">
-        <div id="labelContainer">
-          <div class="label-product" id="labelProductName">Product Name</div>
-          <div class="label-size" id="labelSizeText">Size: M</div>
-          <div class="label-price" id="labelPrice">Rs: 1000.00</div>
-          <img id="barcodePreviewImg" alt="Barcode Preview" />
-          <div class="label-code" id="labelCode">ABC12345</div>
-         
+        <div class="label-wrapper">
+          <div id="labelContainer">
+            <div class="label-product" id="labelProductName">Product Name</div>
+            <div class="label-size" id="labelSizeText">Size: M</div>
+            <div class="label-price" id="labelPrice">Rs: 1000.00</div>
+            <img id="barcodePreviewImg" alt="Barcode Preview" />
+            <div class="label-code" id="labelCode">ABC12345</div>
+          </div>
         </div>
       </div>
   

@@ -1,155 +1,248 @@
 body {
-    font-family: 'Segoe UI', sans-serif;
-    margin: 0;
-    padding: 0;
-    background: #f4f4f4;
-  }
-  
-  header {
-    background: #222;
-    color: #fff;
-    padding: 20px 30px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  header a {
-    color: #fff;
-    text-decoration: none;
-    font-weight: bold;
-  }
-  
+  font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: #f8f9fa;
+  color: #333;
+  line-height: 1.5;
+}
+
+header {
+  background: linear-gradient(135deg, #455a64, #607d8b);
+  color: #fff;
+  padding: 20px 30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+header a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  background: rgba(255, 255, 255, 0.2);
+  padding: 8px 16px;
+  border-radius: 50px;
+  transition: all 0.2s ease;
+}
+
+header a:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+main.grid-container {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 30px;
+  overflow-x: auto;
+}
+
+section.box {
+  background: #fff;
+  padding: 24px;
+  border-radius: 12px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.03);
+  flex: 1 1 auto;
+  min-width: 320px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+section.box:hover {
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.06);
+  transform: translateY(-5px);
+}
+
+section.box.large {
+  flex: 1.3;
+}
+
+section.box.small {
+  flex: 0.9;
+}
+
+section.box h2 {
+  margin-top: 0;
+  font-size: 1.4rem;
+  color: #455a64;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #f0f0f0;
+  font-weight: 600;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+form input,
+form select,
+form textarea {
+  padding: 12px 16px;
+  font-size: 15px;
+  border: 2px solid #cfd8dc;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.04);
+}
+
+form input:focus,
+form select:focus,
+form textarea:focus {
+  border-color: #607d8b;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(96, 125, 139, 0.15);
+}
+
+form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+form button {
+  background: #546e7a;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(84, 110, 122, 0.2);
+  margin-top: 8px;
+}
+
+form button:hover {
+  background: #455a64;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(84, 110, 122, 0.25);
+}
+
+form button:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(84, 110, 122, 0.15);
+}
+
+/* Table styling */
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 14px;
+  margin-top: 16px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.03);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+table thead {
+  background: linear-gradient(to right, #455a64, #607d8b);
+  color: #fff;
+}
+
+table th {
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+table tbody tr:hover {
+  background-color: #f8f9ff;
+}
+
+table button {
+  padding: 6px 12px;
+  margin-right: 6px;
+  font-size: 13px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+button.update {
+  background-color: #4caf50;
+  color: white;
+  box-shadow: 0 2px 5px rgba(76, 175, 80, 0.2);
+}
+
+button.update:hover {
+  background-color: #388e3c;
+  transform: translateY(-2px);
+}
+
+button.delete {
+  background-color: #f44336;
+  color: white;
+  box-shadow: 0 2px 5px rgba(244, 67, 54, 0.2);
+}
+
+button.delete:hover {
+  background-color: #d32f2f;
+  transform: translateY(-2px);
+}
+
+/* Responsive tweaks */
+@media (max-width: 1400px) {
   main.grid-container {
-    display: flex;
-    flex-wrap: nowrap;
-    justify-content: space-between;
-    gap: 20px;
-    padding: 20px;
-    overflow-x: auto;
+    flex-wrap: wrap;
   }
-  
+
   section.box {
-    background: #fff;
-    padding: 15px 20px;
-    border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    flex: 1 1 auto;
-    min-width: 320px;
+    min-width: 100%;
   }
-  
-  section.box.large {
-    flex: 1.3;
-  }
-  
-  section.box.small {
-    flex: 0.9;
-  }
-  
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 15px;
-  }
-  
-  form input,
-  form select,
-  form textarea,
-  form button {
-    padding: 8px;
-    font-size: 14px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  
-  form textarea {
-    resize: vertical;
-  }
-  
-  form button {
-    background: #6a1b9a;
-    color: #fff;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background 0.3s ease;
-  }
-  
-  form button:hover {
-    background: #4a137a;
-  }
-  
-  /* Table styling */
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 14px;
-  }
-  
-  table thead {
-    background-color: #6a1b9a;
-    color: #fff;
-  }
-  
-  table th,
-  table td {
-    padding: 8px 10px;
-    border: 1px solid #ddd;
-    text-align: left;
-  }
-  
-  table tbody tr:hover {
-    background-color: #f9f9f9;
-  }
-  
-  table button {
-    padding: 4px 8px;
-    margin-right: 4px;
-    font-size: 12px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  button.update {
-    background-color: #2196f3;
-    color: white;
-  }
-  
-  button.delete {
-    background-color: #f44336;
-    color: white;
-  }
-  
-  /* Responsive tweaks */
-  @media (max-width: 1300px) {
-    main.grid-container {
-      flex-wrap: wrap;
-    }
-  
-    section.box {
-      min-width: 100%;
-    }
-  }
-  
-  /* Search box styling */
+}
+
+/* Search box styling */
 input[type="text"][id$="Search"] {
-    padding: 8px;
-    font-size: 14px;
-    border: 1px solid #bbb;
-    border-radius: 4px;
-    margin-bottom: 10px;
-    width: 100%;
-    box-sizing: border-box;
-    outline-color: #6a1b9a;
-    transition: border-color 0.2s ease;
-  }
-  
-  input[type="text"][id$="Search"]::placeholder {
-    color: #aaa;
-  }
-  
-  input[type="text"][id$="Search"]:focus {
-    border-color: #6a1b9a;
-    box-shadow: 0 0 0 2px rgba(106, 27, 154, 0
-  
+  padding: 12px 16px;
+  font-size: 15px;
+  border: 2px solid #cfd8dc;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  width: 100%;
+  box-sizing: border-box;
+  background-color: #f8f9fa;
+  transition: all 0.2s ease;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.04);
+}
+
+input[type="text"][id$="Search"]::placeholder {
+  color: #9e9e9e;
+}
+
+input[type="text"][id$="Search"]:focus {
+  border-color: #607d8b;
+  outline: none;
+  background-color: #fff;
+  box-shadow: 0 0 0 3px rgba(96, 125, 139, 0.15);
+}
+
+/* Add these fonts for better typography */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');

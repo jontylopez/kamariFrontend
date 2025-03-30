@@ -217,11 +217,16 @@ async function startNewSession() {
   }
 
   const startupCash = parseFloat(prompt("Enter startup cash amount:") || 0);
+  const now = new Date();
+  const session_date = now.toISOString().split("T")[0]; // YYYY-MM-DD
+  const start_time = now.toTimeString().split(" ")[0];  // HH:MM:SS
 
   try {
     const res = await axios.post(sessionApi, {
       startup_cash: startupCash,
-      status: "active",
+      status: "open",        
+      session_date,
+      start_time,
     });
 
     currentSessionId = res.data.id;
@@ -240,6 +245,7 @@ async function startNewSession() {
     alert("Failed to start new session");
   }
 }
+
 
 async function closeCurrentSession() {
   if (!confirm("Are you sure you want to close the current session?")) return;
