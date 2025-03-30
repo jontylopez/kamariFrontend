@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Supplier / Brand / Product Manager | Kamari Admin</title>
+  <link rel="stylesheet" href="css/supplierBrandProduct.css" />
+  <link rel="icon" type="image/x-icon" href="images/favicon.ico" />
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+
+  <header>
+    <h1>Supplier | Brand | Product Manager</h1>
+    <a href="index.html">← Back to Dashboard</a>
+  </header>
+
+  <main class="grid-container">
+    <!-- Add Supplier -->
+    <section class="box large">
+      <h2>Add Supplier</h2>
+      <form id="supplierForm">
+        <input type="text" id="supplierName" placeholder="Name" required />
+        <input type="text" id="supplierTel" placeholder="Telephone" />
+        <input type="email" id="supplierEmail" placeholder="Email" />
+        <textarea id="supplierAddress" placeholder="Address"></textarea>
+        <button type="submit">Create Supplier</button>
+      </form>
+      <input type="text" id="supplierSearch" placeholder="Search Suppliers..." />
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Tel</th>
+            <th>Email</th>
+            <th>Address</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="supplierTableBody"></tbody>
+      </table>
+    </section>
+
+    <!-- Add Brand -->
+    <section class="box small">
+      <h2>Add Brand</h2>
+      <form id="brandForm">
+        <input type="text" id="brandName" placeholder="Brand Name" required />
+        <button type="submit">Add Brand</button>
+      </form>
+      <input type="text" id="brandSearch" placeholder="Search Brands..." />
+
+      <table>
+        <thead>
+          <tr>
+            <th>Brand</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="brandTableBody"></tbody>
+      </table>
+    </section>
+
+    <!-- Supplier-Brand Combo -->
+    <section class="box small">
+      <h2>Create Supplier-Brand Combo</h2>
+      <form id="comboForm">
+        <select id="comboSupplier" required></select>
+        <select id="comboBrand" required></select>
+        <button type="submit">Link</button>
+      </form>
+      <input type="text" id="comboSearch" placeholder="Search Combos..." />
+
+      <table>
+        <thead>
+          <tr>
+            <th>Supplier</th>
+            <th>Brand</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="comboTableBody"></tbody>
+      </table>
+    </section>
+
+    <!-- Add New Product -->
+    <section class="box large">
+      <h2>Add New Product</h2>
+      <form id="productForm">
+        <input type="text" id="productName" placeholder="Product Name" required />
+        <select id="productGender" required>
+          <option value="male">Male</option>
+          <option value="female">Female</option>
+          <option value="unisex">Unisex</option>
+        </select>
+        <select id="productType" required>
+          <option value="UpperBody">Upper Body</option>
+          <option value="LowerBody">Lower Body</option>
+          <option value="FullBody">Full Body</option>
+          <option value="UnderGarment">Under Garment</option>
+          <option value="Article">Article</option>
+        </select>
+        
+        <button type="submit">Add Product</button>
+      </form>
+      <input type="text" id="productSearch" placeholder="Search Products..." />
+
+      <table>
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Gender</th>
+            <th>Type</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="productTableBody"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="js/supplierBrandProduct.js"></script>
+</body>
+</html>

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Inventory Manager | Kamari Admin</title>
+  <link rel="stylesheet" href="css/inv.css" />
+  <link rel="icon" type="image/x-icon" href="images/favicon.ico" />
+  <script src="https://cdn.jsdelivr.net/npm/qz-tray/qz-tray.js"></script>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode/dist/JsBarcode.all.min.js"></script>
+</head>
+<body>
+
+  <header>
+    <h1>Inventory Manager</h1>
+    <a href="index.html">← Back to Dashboard</a>
+  </header>
+
+  <main class="grid-container">
+    <section class="box large">
+      <h2>Add Inventory Item</h2>
+      <form id="inventoryForm">
+        <input type="text" id="inventoryName" placeholder="Display Name (e.g. WUP001)" required />
+
+        <select id="inventoryProduct" required>
+          <option value="">Select Product</option>
+        </select>
+
+        <select id="inventoryCombo" required>
+          <option value="">Select Supplier-Brand Combo</option>
+        </select>
+
+        <select id="inventorySize" required>
+          <option value="">Select Size</option>
+          <option value="XS">XS</option>
+          <option value="S">S</option>
+          <option value="M">M</option>
+          <option value="L">L</option>
+          <option value="XL">XL</option>
+          <option value="XXL">XXL</option>
+          <option value="Other">Other</option>
+        </select>
+
+        <input type="text" id="inventoryColor" placeholder="Color" required />
+        <input type="number" id="inventoryQuantity" placeholder="Quantity" required />
+        <input type="number" id="inventoryBuyPrice" placeholder="BuyPrice" required />
+        <input type="number" id="inventorySellPrice" placeholder="Sell Price" required />
+        <textarea id="inventoryDesc" placeholder="Description (optional)"></textarea>
+
+        <button type="submit">Add Inventory</button>
+      </form>
+
+      <input type="text" id="inventorySearch" placeholder="Search Inventory..." />
+
+      <table>
+        <thead>
+            <tr>
+              <th>Display Name</th>
+              <th>Product</th>
+              <th>Supplier</th>
+              <th>Brand</th>
+              <th>Size</th>
+              <th>Color</th>
+              <th>Description</th>
+              <th>Barcode</th>
+              <th>Quantity</th>
+              <th>Price</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          
+        <tbody id="inventoryTableBody"></tbody>
+      </table>
+    </section>
+ <!-- Barcode Download Modal -->
+ <div id="barcodeDownloadModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeDownloadModal()">&times;</span>
+      <h3>Barcode Label Preview</h3>
+  
+      <div class="label-settings">
+        <label>Width (mm): <input type="number" id="labelWidth" value="49" /></label>
+        <label>Height (mm): <input type="number" id="labelHeight" value="25" /></label>
+      </div>
+  
+      <div id="labelPreviewArea">
+        <div id="labelContainer">
+          <div class="label-product" id="labelProductName">Product Name</div>
+          <div class="label-size" id="labelSizeText">Size: M</div>
+          <div class="label-price" id="labelPrice">Rs: 1000.00</div>
+          <img id="barcodePreviewImg" alt="Barcode Preview" />
+          <div class="label-code" id="labelCode">ABC12345</div>
+         
+        </div>
+      </div>
+  
+      <div class="actions">
+        <button onclick="downloadBarcodeAsImage()">Download PNG</button>
+        <button onclick="downloadBarcodeAsPDF()">Download PDF</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Price Selection Modal -->
+  <div id="priceSelectModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h3>Select Sell Price</h3>
+      <div id="priceOptions" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
+      <button onclick="document.getElementById('priceSelectModal').style.display='none'">Cancel</button>
+    </div>
+  </div>
+
+  </main>
+ 
+
+  <script src="js/inv.js"></script>
+</body>
+</html>

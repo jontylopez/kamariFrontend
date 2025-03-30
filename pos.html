@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>POS | Kamari</title>
+  <link rel="stylesheet" href="css/pos.css" />
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
+</head>
+<body>
+  <header>
+    <h1>Kamari POS</h1>
+    <a href="index.html">← Back to Dashboard</a>
+  </header>
+  <div class="session-controls">
+    <button id="startDayBtn">Start Day</button>
+    <button id="closeDayBtn" disabled>Close Day</button>
+    <div id="sessionStatus" style="margin-top: 10px; font-weight: bold;"></div>
+  </div>
+  
+  <main class="pos-layout">
+    <section class="cart-section">
+      <div class="order-header">
+        <h3>Order #<span id="orderNumber">001</span></h3>
+        <button id="clearCartBtn">🗑 Clear All</button>
+      </div>
+    
+      <div class="scanned-items" id="cartList">
+        <!-- Items will be rendered here -->
+      </div>
+    
+      <div class="cart-total">
+        <strong>Total: Rs <span id="totalAmount">0.00</span></strong>
+      </div>
+    
+      <button id="checkoutBtn">Payment</button>
+    </section>
+    
+    <div class="scan-barcode">
+      <label for="barcodeInput">Scan Barcode:</label>
+      <input type="text" id="barcodeInput" placeholder="Scan or type barcode here..." autofocus />
+    </div>
+
+    <section class="products-section">
+      <div class="category-buttons">
+        <button class="category active">All</button>
+        <button class="category">Upper Body</button>
+        <button class="category">Lower Body</button>
+        <button class="category">Others</button>
+      </div>
+
+      <div class="product-grid" id="productGrid">
+        <!-- Dynamically generated products go here -->
+      </div>
+    </section>
+  </main>
+
+  <!-- Payment Method Modal -->
+  <div id="paymentModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h2>Select Payment Method</h2>
+      <button onclick="handlePaymentMethod('cash')">💵 Cash</button>
+      <button onclick="handlePaymentMethod('card')">💳 Card</button>
+      <button onclick="handlePaymentMethod('qr')">📱 QR</button>
+      <button onclick="handlePaymentMethod('voucher')">🎫 Voucher</button>
+      <button onclick="closeModal('paymentModal')">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Cash Payment Modal -->
+  <div id="cashModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <h2>Cash Payment</h2>
+      <p>Total to Pay: Rs <span id="cashTotalDisplay">0.00</span></p>
+  
+      <div class="cash-input-field">
+        <label>Enter Cash Received:</label>
+        <input type="number" id="cashInput" placeholder="Amount received">
+      </div>
+  
+      <div class="denomination-calculator cash-in">
+        <h3>Count Physical Cash</h3>
+              
+          <div class="denomination">
+            <label>5000:</label><input type="number" id="cash5000" value="0" min="0">
+          </div>
+          <div class="denomination">
+            <label>1000:</label><input type="number" id="cash1000" value="0" min="0">
+          </div>
+          <div class="denomination">
+            <label>500:</label><input type="number" id="cash500" value="0" min="0">
+          </div>
+          <div class="denomination">
+            <label>100:</label><input type="number" id="cash100" value="0" min="0">
+          </div>
+          <div class="denomination">
+            <label>50:</label><input type="number" id="cash50" value="0" min="0">
+          </div>
+          <div class="denomination">
+            <label>20:</label><input type="number" id="cash20" value="0" min="0">
+          </div>
+          <div class="denomination">
+            <label>10:</label><input type="number" id="cash10" value="0" min="0">
+          </div>
+          <div class="denomination">
+            <label>1:</label><input type="number" id="cash1" value="0" min="0">
+          </div>
+          <div class="denomination">
+            <label>0.01:</label><input type="number" id="cash001" value="0" min="0">
+          </div>
+          
+      </div>
+  
+      <button id="validateCashBtn">Validate Cash</button>
+  
+      <div id="changeSection" style="display: none;">
+        <p>Change Due: Rs <span id="changeAmount">0.00</span></p>
+      </div>
+  
+      <div id="finalCashOutSection" style="display: none;">
+        <h3>Count Change to Give</h3>
+                
+            <div class="denomination">
+              <label>5000:</label><input type="number" id="changecash5000" value="0" min="0">
+            </div>
+            <div class="denomination">
+              <label>1000:</label><input type="number" id="changecash1000" value="0" min="0">
+            </div>
+            <div class="denomination">
+              <label>500:</label><input type="number" id="changecash500" value="0" min="0">
+            </div>
+            <div class="denomination">
+              <label>100:</label><input type="number" id="changecash100" value="0" min="0">
+            </div>
+            <div class="denomination">
+              <label>50:</label><input type="number" id="changecash50" value="0" min="0">
+            </div>
+            <div class="denomination">
+              <label>20:</label><input type="number" id="changecash20" value="0" min="0">
+            </div>
+            <div class="denomination">
+              <label>10:</label><input type="number" id="changecash10" value="0" min="0">
+            </div>
+            <div class="denomination">
+              <label>1:</label><input type="number" id="changecash1" value="0" min="0">
+            </div>
+            <div class="denomination">
+              <label>0.01:</label><input type="number" id="changecash001" value="0" min="0">
+            </div>
+            
+        <button id="confirmCashBtn" style="display: none;">Confirm</button>
+        <button id="finalizePaymentBtn">Finalize Payment</button>
+      </div>
+  
+      <button onclick="closeModal('cashModal')">Cancel</button>
+    </div>
+  </div>
+  
+
+<!-- Customer Prompt Modal -->
+<div id="customerModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <h2>Customer Info</h2>
+    <label for="customerPhone">Mobile Number:</label>
+    <input type="text" id="customerPhone" placeholder="07XXXXXXXX">
+
+    <div id="newCustomerFields" style="display: none;">
+      <label for="customerName">Name:</label>
+      <input type="text" id="customerName" placeholder="Full Name">
+
+      <label for="customerEmail">Email:</label>
+      <input type="email" id="customerEmail" placeholder="Email">
+      <button id="registerCustomerBtn">Register</button>
+    </div>
+
+    <button id="searchCustomerBtn">Search</button>
+    <button id="skipCustomerBtn">Skip</button>
+  </div>
+</div>
+
+
+<div id="receiptModal" class="modal" style="display: none;">
+  <div class="modal-content" id="receiptContent">
+    <!-- Receipt content will be added via JS -->
+  </div>
+</div>
+
+
+<!-- Price Selection Modal -->
+<div id="priceSelectModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <h3>Select Sell Price</h3>
+    <p id="priceModalProductName"></p>
+    <div id="priceOptions"></div>
+    <button onclick="closeModal('priceSelectModal')">Cancel</button>
+  </div>
+</div>
+
+  <script src="js/pos.js"></script>
+</body>
+</html>

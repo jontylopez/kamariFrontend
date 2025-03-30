@@ -1,0 +1,281 @@
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f0f0f0;
+    margin: 0;
+    padding: 0;
+  }
+  
+  header {
+    padding: 15px 30px;
+    background-color: #222;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  .pos-layout {
+    display: flex;
+    height: calc(100vh - 70px);
+  }
+  
+  .cart-section {
+    width: 30%;
+    background: #fff;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  
+  .order-header {
+    margin-bottom: 15px;
+  }
+  
+  .scanned-items {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin-bottom: 15px;
+  }
+  
+  .cart-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-bottom: 1px solid #ddd;
+    font-size: 14px;
+  }
+  
+  .cart-total {
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+  
+  #checkoutBtn {
+    background: #6a1b9a;
+    color: white;
+    padding: 12px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 4px;
+  }
+  
+  .products-section {
+    flex-grow: 1;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .category-buttons {
+    margin-bottom: 15px;
+  }
+  
+  .category {
+    background: #e0e0e0;
+    border: none;
+    margin-right: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+  }
+  
+  .category.active {
+    background: #6a1b9a;
+    color: white;
+  }
+  
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 12px;
+    overflow-y: auto;
+  }
+  
+  .product-card {
+    background: white;
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  
+  .product-card img {
+    max-width: 100%;
+    height: 80px;
+    object-fit: contain;
+  }
+  
+  .product-card:hover {
+    border-color: #6a1b9a;
+  }
+  .session-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  #sessionStatus {
+    font-weight: bold;
+    color: #444;
+  }
+  
+  #startDayBtn,
+  #closeDayBtn {
+    padding: 8px 15px;
+    font-size: 14px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  
+  #startDayBtn {
+    background-color: #4caf50;
+    color: white;
+  }
+  
+  #closeDayBtn {
+    background-color: #f44336;
+    color: white;
+  }
+    
+
+  .scan-barcode {
+    margin-bottom: 15px;
+  }
+  
+  .scan-barcode input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    box-sizing: border-box;
+    border: 2px solid #6a1b9a;
+    border-radius: 4px;
+  }
+  .cart-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #ccc;
+    padding: 10px 0;
+    gap: 10px;
+    font-size: 14px;
+  }
+  
+  .cart-item button {
+    padding: 4px 8px;
+    font-size: 14px;
+    margin: 0 2px;
+    cursor: pointer;
+  }
+  
+  .cart-item input[type="number"] {
+    font-size: 14px;
+    padding: 2px;
+  }
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 999;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .modal-content {
+    background: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    width: 400px;
+    max-width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  
+  .modal-content input {
+    width: 100%;
+    padding: 8px;
+    margin: 5px 0 15px;
+    font-size: 16px;
+  }
+  
+  .denomination-calculator {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: space-between;
+  }
+  
+  .denomination {
+    flex: 1 1 45%;
+  }
+  
+  
+  button {
+    padding: 10px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+  }
+  
+  #validateCashBtn {
+    background-color: #2196f3;
+    color: white;
+    width: 100%;
+  }
+  
+  #confirmAndPrintBtn {
+    background-color: #4caf50;
+    color: white;
+    width: 100%;
+  }
+  
+  .cancel-btn {
+    margin-top: 10px;
+    background-color: #999;
+    color: white;
+    width: 100%;
+  }
+  
+  .error-message {
+    color: red;
+    font-weight: bold;
+    margin-bottom: 10px;
+  }
+  #finalCashOutSection {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #ccc;
+  }
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    #receiptModal, #receiptModal * {
+      visibility: visible;
+    }
+    #receiptModal {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+      background: white;
+    }
+    button {
+      display: none;
+    }
+  }
+    

@@ -21,7 +21,9 @@ document.addEventListener("DOMContentLoaded", () => {
   document
     .getElementById("inventoryForm")
     .addEventListener("submit", handleSubmit);
-  document.getElementById("search").addEventListener("input", filterInventory);
+  document
+    .getElementById("inventorySearch")
+    .addEventListener("input", filterInventory);
 
   // Add event listeners for modal close and print buttons
   document.querySelector(".close").addEventListener("click", () => {
@@ -31,18 +33,36 @@ document.addEventListener("DOMContentLoaded", () => {
 async function loadSupBrands() {
   const res = await axios.get(supBrandApi);
   allSupBrands = res.data;
-}
-// Load products into dropdown
-async function loadProducts() {
-  const res = await axios.get(productApi);
-  allProducts = res.data;
-  const select = document.getElementById("product");
-  res.data.forEach((p) => {
+  const select = document.getElementById("inventoryCombo");
+  select.innerHTML = `<option value="">Select Supplier-Brand Combo</option>`;
+  allSupBrands.forEach((sb) => {
+    const supplier = allSuppliers.find((s) => s.id === sb.supId);
+    const brand = sb.brandName || `Brand ${sb.brandId}`; // update based on structure
     const option = document.createElement("option");
-    option.value = JSON.stringify(p); // stringified object
-    option.textContent = `${p.name} (${p.gender} - ${p.type})`;
+    option.value = sb.id;
+    option.textContent = `${supplier?.name || "Supplier"} | ${brand}`;
     select.appendChild(option);
   });
+}
+
+// Load products into dropdown
+async function loadProducts() {
+  try {
+    const res = await axios.get(productApi);
+    allProducts = res.data;
+
+    const select = document.getElementById("inventoryProduct");
+    select.innerHTML = `<option value="">Select Product</option>`; // Reset options
+
+    allProducts.forEach((p) => {
+      const option = document.createElement("option");
+      option.value = p.id; // use the product ID directly
+      option.textContent = `${p.name} (${p.gender} - ${p.type})`;
+      select.appendChild(option);
+    });
+  } catch (err) {
+    console.error("Error loading products:", err);
+  }
 }
 
 // Load suppliers
@@ -66,28 +86,38 @@ async function loadInventory() {
 }
 
 function renderInventoryTable(data) {
-  const tbody = document.querySelector("#inventoryTable tbody");
+  const tbody = document.getElementById("inventoryTableBody");
+
   tbody.innerHTML = "";
 
   data.forEach((inv) => {
     const product = allProducts.find((p) => p.id === inv.productId);
-    const supBr = allSupBrands.find((sb) => sb.id === product?.supBrId);
+    const supBr = allSupBrands.find((sb) => sb.id === inv.supBrId); // 🔄 CHANGED: use inv.supBrId
     const supplier = allSuppliers.find((s) => s.id === supBr?.supId);
+    const brand = supBr?.brandName || "Brand"; // 🔄 Optional: use pre-joined name if available
     const sellPrice = getLatestSellPrice(inv.id);
+    const quantity = getTotalStockQuantity(inv.id);
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${inv.bCodeId}</td>
-      <td>${product?.name || "N/A"}</td>
-      <td>${inv.size}</td>
-      <td>${inv.color}</td>
-      <td>${sellPrice}</td>
-      <td>
-        <button onclick="openDownloadModal('${inv.bCodeId}', '${
-      product?.name || "Product"
-    }', '${sellPrice}', '${supplier?.name || ""}')">Print</button>
-      </td>
-    `;
+        <td>${inv.name}</td>
+        <td>${product?.name || "N/A"}</td>
+        <td>${supplier?.name || "Supplier"}</td>
+        <td>${brand}</td>
+        <td>${inv.size}</td>
+        <td>${inv.color}</td>
+        <td>${inv.description || "-"}</td>
+        <td>
+          ${inv.bCodeId}
+          <button onclick="openDownloadModal('${inv.bCodeId}', '${inv.name}', '${sellPrice}', '${inv.size}')">Print</button>
+
+        </td>
+        <td>${quantity}</td>
+        <td>${sellPrice}</td>
+        <td>
+          <button class="delete" onclick="deleteInventory(${inv.id})">🗑</button>
+        </td>
+      `;
     tbody.appendChild(tr);
   });
 }
@@ -107,19 +137,24 @@ function filterInventory() {
 
 function getLatestSellPrice(inventoryId) {
   const entries = allStockMovements
-    .filter(entry => entry.inventoryId === inventoryId)
+    .filter((entry) => entry.inventoryId === inventoryId)
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 
   return entries.length ? entries[0].sell_price : "-";
 }
-
+function getTotalStockQuantity(inventoryId) {
+  const relevant = allStockMovements.filter(
+    (entry) => entry.inventoryId === inventoryId
+  );
+  return relevant.reduce((sum, s) => sum + s.quantity, 0);
+}
 
 function showPriceSelectionModal(priceList, callback) {
   const modal = document.getElementById("priceSelectModal");
   const priceContainer = document.getElementById("priceOptions");
   priceContainer.innerHTML = "";
 
-  priceList.forEach(price => {
+  priceList.forEach((price) => {
     const btn = document.createElement("button");
     btn.textContent = `Rs. ${price.toFixed(2)}`;
     btn.onclick = () => {
@@ -132,30 +167,43 @@ function showPriceSelectionModal(priceList, callback) {
   modal.style.display = "flex";
 }
 
-function showBarcodeLabel(barcode, name, price, supplierName) {
-  document.getElementById("barcodeDownloadModal").style.display = "flex";
-  document.getElementById("labelProductName").textContent = name;
-  document.getElementById("labelPrice").textContent = `Rs: ${parseFloat(price).toFixed(2)}`;
-  document.getElementById("labelCode").textContent = barcode;
-  document.getElementById("barcodePreviewImg").src = `http://localhost:3000/api/barcode/${barcode}`;
-  document.getElementById("labelContainer").dataset.barcode = barcode;
-
-  updateLabelSize();
-}
-
+function showBarcodeLabel(barcode, inventoryName, price, size) {
+    document.getElementById("barcodeDownloadModal").style.display = "flex";
+  
+    // ✅ Update fields
+    document.getElementById("labelProductName").textContent = inventoryName;
+    document.getElementById("labelSizeText").textContent = `Size: ${size}`;
+    document.getElementById("labelPrice").textContent = `Rs: ${parseFloat(price).toFixed(2)}`;
+    document.getElementById("labelCode").textContent = barcode;
+  
+    document.getElementById("barcodePreviewImg").src = `http://localhost:3000/api/barcode/${barcode}`;
+    document.getElementById("labelContainer").dataset.barcode = barcode;
+  
+    updateLabelSize();
+  }
+  
 
 async function handleSubmit(e) {
   e.preventDefault();
-  const productData = JSON.parse(document.getElementById("product").value);
-  const { id: productId, gender, type } = productData;
+  const name = document.getElementById("inventoryName").value.trim();
 
-  const size = document.getElementById("size").value.trim();
-  const color = document.getElementById("color").value.trim();
-  const description = document.getElementById("description").value.trim();
-  const quantity = parseInt(document.getElementById("quantity").value);
-  const buy_price = parseFloat(document.getElementById("buy_price").value);
-  const sell_price = parseFloat(document.getElementById("sell_price").value);
-  const message = document.getElementById("message");
+  const productId = parseInt(document.getElementById("inventoryProduct").value);
+  const product = allProducts.find((p) => p.id === productId);
+  const { gender, type } = product;
+
+  const supBrId = parseInt(document.getElementById("inventoryCombo").value);
+
+  const size = document.getElementById("inventorySize").value.trim();
+  const color = document.getElementById("inventoryColor").value.trim();
+  const description = document.getElementById("inventoryDesc").value.trim();
+  const quantity = parseInt(document.getElementById("inventoryQuantity").value);
+  const buy_price = parseFloat(
+    document.getElementById("inventoryBuyPrice").value
+  );
+  const sell_price = parseFloat(
+    document.getElementById("inventorySellPrice").value
+  );
+  const message = document.getElementById("inventoryDesc");
 
   try {
     const genderCode =
@@ -177,7 +225,9 @@ async function handleSubmit(e) {
     const bCodeId = `${prefix}${padded}`;
 
     const invResPost = await axios.post(inventoryApi, {
+      name,
       productId,
+      supBrId,
       size,
       color,
       description,
@@ -220,45 +270,45 @@ async function handleSubmit(e) {
     }`;
   }
 }
-function openDownloadModal(barcode, name, defaultPrice, supplierName) {
-  const inventory = allInventory.find(inv => inv.bCodeId === barcode);
-  const matchingPrices = allStockMovements
-    .filter(s => s.inventoryId === inventory.id && s.quantity > 0)
-    .map(s => s.sell_price);
-
-  const uniquePrices = [...new Set(matchingPrices.map(p => parseFloat(p)))];
-
-  if (uniquePrices.length > 1) {
-    // Show selection modal if multiple prices exist
-    showPriceSelectionModal(uniquePrices, (selectedPrice) => {
-      showBarcodeLabel(barcode, name, selectedPrice, supplierName);
-    });
-  } else {
-    showBarcodeLabel(barcode, name, defaultPrice, supplierName);
+function openDownloadModal(barcode, inventoryName, defaultPrice, size) {
+    const inventory = allInventory.find(inv => inv.bCodeId === barcode);
+    const matchingPrices = allStockMovements
+      .filter(s => s.inventoryId === inventory.id && s.quantity > 0)
+      .map(s => s.sell_price);
+  
+    const uniquePrices = [...new Set(matchingPrices.map(p => parseFloat(p)))];
+  
+    if (uniquePrices.length > 1) {
+      showPriceSelectionModal(uniquePrices, (selectedPrice) => {
+        showBarcodeLabel(barcode, inventoryName, selectedPrice, size);
+      });
+    } else {
+      showBarcodeLabel(barcode, inventoryName, defaultPrice, size);
+    }
   }
-}
+  
 
 //function openDownloadModal(barcode, name, price) {
-  //document.getElementById("barcodeDownloadModal").style.display = "flex";
-  //document.getElementById("labelProductName").textContent = name;
-  //document.getElementById("labelPrice").textContent = `Rs: ${parseFloat(
-  //  price
-  //).toFixed(2)}`;
-  //document.getElementById("labelCode").textContent = barcode;
-  //document.getElementById(
-  //  "barcodePreviewImg"
-  //).src = `http://localhost:3000/api/barcode/${barcode}`;
+//document.getElementById("barcodeDownloadModal").style.display = "flex";
+//document.getElementById("labelProductName").textContent = name;
+//document.getElementById("labelPrice").textContent = `Rs: ${parseFloat(
+//  price
+//).toFixed(2)}`;
+//document.getElementById("labelCode").textContent = barcode;
+//document.getElementById(
+//  "barcodePreviewImg"
+//).src = `http://localhost:3000/api/barcode/${barcode}`;
 
-  // 🔥 This is what your downloadBarcodeAsImage/PDF relies on
-  //document.getElementById("labelContainer").dataset.barcode = barcode;
+// 🔥 This is what your downloadBarcodeAsImage/PDF relies on
+//document.getElementById("labelContainer").dataset.barcode = barcode;
 
-  //updateLabelSize();
-  //document
-    //.getElementById("labelWidth")
-    //.addEventListener("input", updateLabelSize);
-  //document
-   // .getElementById("labelHeight")
-   // .addEventListener("input", updateLabelSize);
+//updateLabelSize();
+//document
+//.getElementById("labelWidth")
+//.addEventListener("input", updateLabelSize);
+//document
+// .getElementById("labelHeight")
+// .addEventListener("input", updateLabelSize);
 //}
 
 function updateLabelSize() {
@@ -270,8 +320,6 @@ function updateLabelSize() {
   container.style.width = `${width * dpi}px`;
   container.style.height = `${height * dpi}px`;
 }
-
-
 
 function fetchBarcodeImage(barcode) {
   document.getElementById(
