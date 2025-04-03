@@ -219,8 +219,8 @@ function showBarcodeLabel(barcode, inventoryName, price, size) {
 
   // ✅ Update fields
   document.getElementById("labelProductName").textContent = inventoryName;
-  document.getElementById("labelSizeText").textContent = `Size: ${size}`;
-  document.getElementById("labelPrice").textContent = `Rs: ${parseFloat(
+  document.getElementById("labelSizeText").textContent = `Size : ${size}`;
+  document.getElementById("labelPrice").textContent = `Rs : ${parseFloat(
     price
   ).toFixed(2)}`;
   document.getElementById("labelCode").textContent = barcode;

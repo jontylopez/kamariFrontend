@@ -5,6 +5,7 @@
   <title>POS | Kamari</title>
   <link rel="stylesheet" href="css/pos.css" />
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
   <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
 </head>
 <body>
@@ -15,12 +16,7 @@
 
   <main class="pos-layout">
     <aside class="left-panel">
-      <div class="session-status">
-        <button id="startDayBtn" class="always-enabled">Start Day</button>
-
-        <button id="closeDayBtn" disabled>Close Day</button>
-        <div id="sessionStatus"></div>
-      </div>
+     
 
       <div class="cart-header">
         <h3>Order #<span id="orderNumber">001</span></h3>
@@ -41,6 +37,17 @@
     </aside>
 
     <section class="right-panel">
+      <div class="session-status">
+        <button id="startDayBtn" class="always-enabled">Start Day</button>
+
+        <button id="closeDayBtn" disabled>Close Day</button>
+        
+      </div>
+      <div id="sessionStatus"></div>
+      <div class="cash-buttons">
+        <button id="cashInBtn">➕ Cash In</button>
+        <button id="cashOutBtn">➖ Cash Out</button>
+      </div>
       <div class="barcode-section">
         <input type="text" id="barcodeInput" placeholder="Scan or type barcode here..." autofocus />
       </div>
@@ -102,7 +109,26 @@
     </div>
   </div>
 
- 
+ <!-- Cash Transaction Modal -->
+<div id="cashTrModal" class="modal" style="display: none;">
+  <div class="modal-content">
+    <h2 id="cashTrTitle">Cash Transaction</h2>
+
+    <label for="cashTrAmount">Amount:</label>
+    <input type="number" id="cashTrAmount" placeholder="Enter amount" />
+
+    <label for="cashTrReason">Reason:</label>
+    <input type="text" id="cashTrReason" placeholder="Enter reason" />
+
+    <div class="modal-actions">
+      <button id="submitCashTrBtn">Submit</button>
+      <button onclick="closeModal('cashTrModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
+
 
 <!-- Cash Modal -->
 <div id="cashModal" class="modal" style="display: none;">
@@ -161,15 +187,19 @@
   </div>
 </div>
 
-<!-- Replace your current receipt modal content with this updated structure -->
 <div id="receiptModal" class="modal" style="display: none;">
   <div id="receiptCombinedWrapper">
+        <!-- Print and Close buttons -->
+        <div style="text-align:center; margin: 15px 0;">
+          <button onclick="window.print()" class="print-btn">🖨️ Print Receipt</button>
+          <button onclick="closeModal('receiptModal')">Close</button>
+        </div>
     <!-- Customer Receipt -->
     <div class="receipt-wrapper" id="receiptContent">
       <!-- HEADER -->
       <div class="receipt-header">
         <img src="images/bill-logo.jpg" class="logo" />
-        <div class="slogan">A R T &nbsp; O F &nbsp; L U X U R Y</div>
+        <div class="slogan">A R T O F L U X U R Y</div>
         <p><strong>Order:</strong> #<span id="receiptOrderNumber"></span></p>
         <p><strong>Customer:</strong> <span id="receiptCustomerId"></span></p>
         <p><strong>Date:</strong> <span id="receiptDate"></span> | Time: <span id="receiptTime"></span></p>
@@ -194,6 +224,7 @@
       
       <div class="totals">
         <p><strong>Payment Method:</strong> <span id="receiptPaymentMethod"></span></p>
+        <p id="receiptBillDiscountWrap" style="display: none;"><strong>Bill Discount:</strong> <span id="receiptBillDiscount"></span>%</p>        
         <p><strong>Total:</strong> Rs <span id="receiptTotal"></span></p>
       </div>
       
@@ -219,6 +250,7 @@
       <h2>Kamari POS - Shop Copy</h2>
       <div class="copy-details">
         <p><strong>Order #:</strong> <span id="shopCopyOrderId"></span></p>
+        <p><strong>Date:</strong><span id="shopCopyDate"></span></p>
         <p><strong>Customer:</strong> <span id="shopCopyCustomer"></span></p>
         <p><strong>Payment Method:</strong> <span id="shopCopyMethod"></span></p>
         <p><strong>Total Amount:</strong> Rs <span id="shopCopyTotal"></span></p>
@@ -226,31 +258,10 @@
       </div>
     </div>
 
-    <!-- Print and Close buttons -->
-    <div style="text-align:center; margin: 15px 0;">
-      <button onclick="window.print()" class="print-btn">🖨️ Print Receipt</button>
-      <button onclick="closeModal('receiptModal')">Close</button>
-    </div>
+
   </div>
 </div>
 
-<!-- Shop Copy Modal -->
-<!-- <div id="shopCopyModal" class="modal" style="display: none;">
-  <div class="shop-copy-content">
-    <h2>Kamari POS - Shop Copy</h2>
-    <div class="copy-details">
-      <p><strong>Order #:</strong> <span id="shopCopyOrderId"></span></p>
-      <p><strong>Customer:</strong> <span id="shopCopyCustomer"></span></p>
-      <p><strong>Payment Method:</strong> <span id="shopCopyMethod"></span></p>
-      <p><strong>Total Amount:</strong> Rs <span id="shopCopyTotal"></span></p>
-      <p id="shopCopyCashInWrap" style="display:none;"><strong>Cash In:</strong> Rs <span id="shopCopyCashIn"></span></p>
-    </div>
-    <div style="text-align:center; margin-top: 15px;">
-      <button onclick="closeReceiptAndCopy()">Close</button>
-
-    </div>
-  </div>
-</div> -->
 
   <script src="js/pos.js"></script>
 </body>
