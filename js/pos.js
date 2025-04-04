@@ -8,7 +8,7 @@ const customerApi = "http://localhost:3000/api/customer";
 const productApi = "http://localhost:3000/api/products";
 const stockApi = "http://localhost:3000/api/stock-movements";
 const cashApi = "http://localhost:3000/api/cash";
-
+const returnApi = "http://localhost:3000/api/return";
 // === Global Variables ===
 let sessionActive = false;
 let currentSessionId = null;
@@ -75,8 +75,280 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById("liveBalance").textContent =
       balance >= 0 ? balance : "0.00";
   });
+  document.getElementById("exchangeBtn").addEventListener("click", () => {
+    if (!sessionActive) return alert("❌ Start a session first.");
+    document.getElementById("exchangeModal").style.display = "flex";
+    document.getElementById("exchangeBarcode").focus();
+  });
+
+  document
+    .getElementById("exchangeBarcode")
+    .addEventListener("keypress", async (e) => {
+      if (e.key !== "Enter") return;
+
+      const code = e.target.value.trim();
+      if (!code) return;
+
+      try {
+        const inv = (await axios.get(`${inventoryApi}/barcode/${code}`)).data;
+        const product = (await axios.get(`${productApi}/${inv.productId}`))
+          .data;
+        const allStocks = (await axios.get(stockApi)).data;
+        const stockOptions = allStocks.filter((s) => s.inventoryId === inv.id);
+
+        const container = document.getElementById("exchangePriceOptions");
+        container.innerHTML = "";
+
+        if (stockOptions.length === 1) {
+          container.innerHTML = `<p>Selected Price: Rs ${stockOptions[0].sell_price}</p>`;
+          container.dataset.stockId = stockOptions[0].id;
+          container.dataset.price = stockOptions[0].sell_price;
+        } else {
+          stockOptions.forEach((s) => {
+            const btn = document.createElement("button");
+            btn.textContent = `Rs ${s.sell_price}`;
+            btn.onclick = () => {
+              container.innerHTML = `<p>Selected Price: Rs ${s.sell_price}</p>`;
+              container.dataset.stockId = s.id;
+              container.dataset.price = s.sell_price;
+            };
+            container.appendChild(btn);
+          });
+        }
+      } catch (err) {
+        console.error("Exchange barcode error:", err);
+        alert("❌ Item not found.");
+      }
+    });
+
+    document.getElementById("submitExchangeBtn").addEventListener("click", async () => {
+      const barcode = document.getElementById("exchangeBarcode").value.trim();
+      const quantity = parseInt(document.getElementById("exchangeQuantity").value);
+      const restock = document.getElementById("exchangeRestock").value === "true";
+    
+      const priceOptionsContainer = document.getElementById("exchangePriceOptions");
+      const stockId = priceOptionsContainer.dataset.stockId;
+      const price = parseFloat(priceOptionsContainer.dataset.price);
+    
+      if (!barcode || !stockId || isNaN(quantity) || isNaN(price)) {
+        return alert("❌ Please complete the exchange form.");
+      }
+    
+      try {
+        const inv = (await axios.get(`${inventoryApi}/barcode/${barcode}`)).data;
+        const now = new Date();
+        const date = now.toISOString().split("T")[0];
+        const time = now.toTimeString().split(" ")[0];
+    
+        const returnRes = await axios.post(returnApi, {
+          session_id: currentSessionId,
+          inventory_id: inv.id,
+          quantity,
+          price,
+          date,
+          time,
+          processed_by: "POS Operator",
+          restock,
+          status: "unused" 
+        });
+    
+        // ✅ If restock is selected, update stock quantity
+        if (restock) {
+          const stock = await axios.get(`${stockApi}/${stockId}`);
+          const updatedQty = stock.data.quantity + quantity;
+          await axios.put(`${stockApi}/update-quantity/${stockId}`, {
+            quantity: updatedQty,
+          });
+        }
+    
+        // ✅ Render Return Receipt Modal
+        const returnData = returnRes.data;
+        const totalPrice = (returnData.quantity * returnData.price).toFixed(2);
+    
+        // Customer Copy
+        document.getElementById("returnId").textContent = returnData.id;
+        document.getElementById("returnItemName").textContent = inv.name || "Unnamed Item";
+        document.getElementById("returnQty").textContent = returnData.quantity;
+        document.getElementById("returnPrice").textContent = returnData.price.toFixed(2);
+        document.getElementById("returnTotal").textContent = totalPrice;
+        document.getElementById("returnDate").textContent = returnData.date;
+        document.getElementById("returnTime").textContent = returnData.time;
+        document.getElementById("returnProcessedBy").textContent = returnData.processed_by;
+    
+        // Shop Copy
+        document.getElementById("shopReturnId").textContent = returnData.id;
+        document.getElementById("shopReturnItem").textContent = inv.name || "Unnamed Item";
+        document.getElementById("shopReturnQty").textContent = returnData.quantity;
+        document.getElementById("shopReturnPrice").textContent = returnData.price.toFixed(2);
+        document.getElementById("shopReturnTotal").textContent = totalPrice;
+        document.getElementById("shopReturnRestocked").textContent = returnData.restock ? "Yes" : "No";
+        document.getElementById("shopReturnDate").textContent = returnData.date;
+        document.getElementById("shopReturnTime").textContent = returnData.time;
+        document.getElementById("shopReturnProcessedBy").textContent = returnData.processed_by;
+    
+        closeModal("exchangeModal");
+        document.getElementById("returnReceiptModal").style.display = "flex";
+    
+      } catch (err) {
+        console.error("❌ Error processing exchange:", err);
+        alert("Error during exchange.");
+      }
+    });
+    
+
+    document.getElementById("exchangeIdInput").addEventListener("keypress", async (e) => {
+      if (e.key !== "Enter") return;
+    
+      const exchangeId = parseInt(e.target.value.trim());
+      if (!exchangeId || isNaN(exchangeId)) return alert("❌ Invalid Exchange ID");
+    
+      try {
+        const returnData = (await axios.get(`${returnApi}/${exchangeId}`)).data;
+        console.log("Return Data:", returnData);
+
+        // ✅ Check if already used
+        if (returnData.status !== "unused") {
+          return alert("❌ This exchange has already been used.");
+        }
+    
+        const returnValue = returnData.price * returnData.quantity;
+        const cartTotal = getCartTotal();
+    
+        const container = document.getElementById("exchangePaymentDetails");
+        const actions = document.getElementById("exchangePaymentActions");
+    
+        container.innerHTML = `
+          <p><strong>Return Value:</strong> Rs ${returnValue.toFixed(2)}</p>
+          <p><strong>Cart Total:</strong> Rs ${cartTotal.toFixed(2)}</p>
+        `;
+    
+        actions.innerHTML = ""; // Clear previous buttons
+    
+        if (cartTotal > returnValue) {
+          const diff = (cartTotal - returnValue).toFixed(2);
+          container.innerHTML += `<p><strong>Customer Needs to Pay:</strong> Rs ${diff}</p>`;
+    
+          const payByCashBtn = document.createElement("button");
+          payByCashBtn.textContent = "Pay by Cash";
+          payByCashBtn.onclick = () => {
+            closeModal("exchangePayModal"); // 👈 close first
+            showExchangeCashModal(diff, exchangeId);
+          };
+          
+          
+    
+          const payByCardBtn = document.createElement("button");
+          payByCardBtn.textContent = "Pay by Card";
+          payByCardBtn.onclick = () => {
+            closeModal('exchangePayModal');
+            document.getElementById("cardDueTotal").textContent = cartTotal.toFixed(2);
+            document.getElementById("cardConfirmBtn").onclick = () => {
+              const confirmCard = confirm("Simulate successful card transaction?");
+              if (confirmCard) {
+                finalizeExchangePayment("card", cartTotal, exchangeId);
+              }
+            };
+            document.getElementById("cardModal").style.display = "flex";
+          };
+          
+          
+    
+          actions.appendChild(payByCashBtn);
+          actions.appendChild(payByCardBtn);
+        } else {
+          container.innerHTML += `<p><strong>No Payment Required.</strong></p>`;
+    
+          const completeBtn = document.createElement("button");
+          completeBtn.textContent = "Finalize Exchange";
+          completeBtn.onclick = () => finalizeExchangePayment("ex", returnValue, exchangeId);
+    
+          actions.appendChild(completeBtn);
+        }
+      } catch (err) {
+        console.error("Exchange Payment Error:", err);
+        alert("❌ Exchange not found.");
+      }
+    });
+
+    // 💰 Live Balance and Validation
+document.getElementById("exchangeCashIn").addEventListener("input", () => {
+  const due = parseFloat(document.getElementById("exchangeCashModal").dataset.dueAmount);
+  const cashIn = parseFloat(document.getElementById("exchangeCashIn").value);
+  const balance = (cashIn - due).toFixed(2);
+
+  document.getElementById("exchangeCashBalance").textContent = balance >= 0 ? balance : "0.00";
+
+  if (!isNaN(cashIn) && cashIn >= due) {
+    document.getElementById("confirmExchangeCashPaymentBtn").style.display = "inline-block";
+  } else {
+    document.getElementById("confirmExchangeCashPaymentBtn").style.display = "none";
+  }
 });
 
+// ✅ Confirm Exchange Payment
+document.getElementById("confirmExchangeCashPaymentBtn").addEventListener("click", () => {
+  const modal = document.getElementById("exchangeCashModal");
+  const exchangeId = modal.dataset.exchangeId;
+  const due = parseFloat(modal.dataset.dueAmount);
+  const cashIn = parseFloat(document.getElementById("exchangeCashIn").value);
+
+  closeModal("exchangeCashModal");
+
+  finalizeExchangePayment("cash", due, exchangeId, cashIn);
+});
+document.getElementById("cardConfirmBtn").addEventListener("click", () => {
+  const confirm = confirm("Simulate successful card transaction?");
+  if (confirm) {
+    finalizePayment("card");
+  }
+});
+document.getElementById("confirmExchangeCardBtn").addEventListener("click", () => {
+  const modal = document.getElementById("exchangeCardModal");
+  const exchangeId = modal.dataset.exchangeId;
+  const amount = parseFloat(modal.dataset.amount);
+
+  closeModal("exchangeCardModal");
+  finalizeExchangePayment("card", amount, exchangeId);
+});
+
+
+    
+    
+});
+function showExchangeCashModal(dueAmount, exchangeId) {
+  // Show values in modal
+  document.getElementById("exchangeDueAmount").textContent = dueAmount;
+  document.getElementById("exchangeCashIn").value = "";
+  document.getElementById("exchangeCashBalance").textContent = "0.00";
+  document.getElementById("confirmExchangeCashPaymentBtn").style.display = "none";
+
+  // Save needed data
+  const modal = document.getElementById("exchangeCashModal");
+  modal.dataset.exchangeId = exchangeId;
+  modal.dataset.dueAmount = dueAmount;
+
+  // Open modal
+  modal.style.display = "flex";
+}
+
+
+function printReceipt(modalId) {
+  // First remove printing class from all modals
+  document.querySelectorAll(".modal").forEach((modal) => {
+    modal.classList.remove("modal-printing");
+  });
+
+  // Add printing class to the specific modal
+  document.getElementById(modalId).classList.add("modal-printing");
+
+  // Print
+  window.print();
+
+  // Optional: Remove the class after printing
+  setTimeout(() => {
+    document.getElementById(modalId).classList.remove("modal-printing");
+  }, 500);
+}
 // === Session ===
 
 async function checkActiveSession() {
@@ -101,7 +373,6 @@ async function checkActiveSession() {
   document.getElementById("closeDayBtn").disabled = !sessionActive;
   togglePOSAccess(sessionActive);
 }
-
 
 // async function checkActiveSession() {
 //   try {
@@ -609,7 +880,7 @@ async function registerCustomer() {
     const payload = {
       name,
       phone,
-      ...(email && { email }) // spread email only if provided
+      ...(email && { email }), // spread email only if provided
     };
 
     const res = await axios.post(customerApi, payload);
@@ -642,6 +913,19 @@ function handlePaymentMethod(method) {
       document.getElementById("cardModal").style.display = "flex";
       break;
 
+    case "bank":
+      document.getElementById("cardDueTotal").textContent =
+        getCartTotal().toFixed(2);
+      document.getElementById("cardModal").style.display = "flex";
+      break;
+
+    case "ex":
+      document.getElementById("exchangeIdInput").value = "";
+      document.getElementById("exchangePaymentDetails").innerHTML = "";
+      document.getElementById("exchangePaymentActions").innerHTML = "";
+      document.getElementById("exchangePayModal").style.display = "flex";
+      break;
+
     case "qr":
       document.getElementById("qrModal").style.display = "flex";
       break;
@@ -666,31 +950,29 @@ function showCashModal() {
   document.getElementById("cashModal").style.display = "flex";
 }
 
+
+
 // === Default Final Validation Function ===
-async function finalizePayment(method, cashInAmount = 0) {
+async function finalizePayment(method, cashInAmount = 0, exchangeId = null, totalOverride = null) {
   try {
     const now = new Date();
-    const total = getCartTotal();
+    const total = totalOverride ?? getCartTotal();
     const billDiscount = parseFloat(
       document.getElementById("billDiscount")?.value || 0
     );
-    // 1. Create Order
+
     const orderRes = await axios.post(orderApi, {
       session_id: currentSessionId,
       order_date: now.toISOString().split("T")[0],
       order_time: now.toTimeString().split(" ")[0],
       customer_id: selectedCustomerId,
       discount: billDiscount,
-      total: total,
+      total,
     });
 
     const orderId = orderRes.data.id;
 
-    // 2. Add Items to pos_order_item
     for (const item of cartItems) {
-      const subtotal =
-        item.quantity * item.price * (1 - (item.discount || 0) / 100);
-
       await axios.post(orderItemApi, {
         order_id: orderId,
         inventory_id: item.id,
@@ -698,29 +980,32 @@ async function finalizePayment(method, cashInAmount = 0) {
         price: item.price,
         quantity: item.quantity,
         discount: item.discount || 0,
-        subtotal: subtotal,
+        subtotal: getItemTotal(item),
       });
 
-      // 3. Update Stock Movement Quantity
       if (item.stockMovementId) {
         const stock = await axios.get(`${stockApi}/${item.stockMovementId}`);
         const updatedQty = stock.data.quantity - item.quantity;
-
         await axios.put(`${stockApi}/update-quantity/${item.stockMovementId}`, {
           quantity: updatedQty < 0 ? 0 : updatedQty,
         });
       }
     }
 
-    // 4. Record Payment (save total only, not cashIn)
+    // ✅ If it's part of an exchange, mark the return used
+    if (exchangeId) {
+      await axios.put(`${returnApi}/${exchangeId}`, {
+        status: "used",
+      });
+    }
+
     await axios.post(paymentApi, {
       order_id: orderId,
-      method: method,
-      amount: total, // Always store the total, not what was received
+      method,
+      amount: total,
     });
-    // 5. Record Cash Transaction (Only if method is cash)
+
     if (method === "cash") {
-      const now = new Date();
       const date = now.toISOString().split("T")[0];
       const time = now.toTimeString().split(" ")[0];
 
@@ -728,7 +1013,7 @@ async function finalizePayment(method, cashInAmount = 0) {
         session_id: currentSessionId,
         order_id: orderId,
         type: "in",
-        reason: "Cash Payment",
+        reason: exchangeId ? "Cash - Exchange Payment" : "Cash Payment",
         amount: total,
         date,
         time,
@@ -736,24 +1021,46 @@ async function finalizePayment(method, cashInAmount = 0) {
       });
     }
 
-    // 5. Render both receipt and shop copy together
-    renderReceiptAndShopCopy(orderId, selectedCustomerId, method, cashInAmount);
-
-    // 6. Reset cart and UI
+    // Save cart items before clearing
+    const itemsForReceipt = [...cartItems];
+    
     cartItems = [];
     renderCart();
-    updateOrderNumber(); // Load next order number
-    document.getElementById("totalAmount").textContent = "0.00";
-    document.getElementById("cashInAmount").value = "";
-    document.getElementById("liveBalance").textContent = "0.00";
+    updateOrderNumber();
+    resetCustomerData();
+    const billDiscountField = document.getElementById("billDiscount");
+    if (billDiscountField) {
+      billDiscountField.value = "0";
+    }
 
+    closeModal("exchangePayModal");
     closeModal("cashModal");
     closeModal("cardModal");
+
+    // Pass the saved items to the receipt
+    renderReceiptAndShopCopy(orderId, selectedCustomerId, method, cashInAmount, total, itemsForReceipt);
   } catch (err) {
     console.error("❌ Finalization failed:", err);
     alert("Error completing transaction.");
   }
 }
+function resetCustomerData() {
+  // Clear selected customer ID
+  selectedCustomerId = null;
+
+  // Clear customer input fields
+  document.getElementById("customerPhone").value = "";
+  document.getElementById("customerName").value = "";
+  document.getElementById("customerEmail").value = "";
+
+  // Hide the new customer registration fields
+  const newFields = document.getElementById("newCustomerFields");
+  if (newFields) {
+    newFields.style.display = "none";
+  }
+}
+
+
 
 function finalizeCashPaymentAndPrint() {
   const cashIn = parseFloat(document.getElementById("cashInAmount").value);
@@ -773,29 +1080,34 @@ function finalizeCashPaymentAndPrint() {
 }
 
 function finalizeCardPaymentAndPrint() {
-  // No cash amount needed
+  // Pass the cart items
   finalizePayment("card");
+}
+
+function finalizeExchangePayment(method, amount, exchangeId, cashInAmount = null) {
+  // Pass the cart items
+  finalizePayment(method, cashInAmount, exchangeId, amount);
 }
 
 function renderReceiptAndShopCopy(
   orderId,
   customerId,
   paymentMethod,
-  cashInAmount = null
+  cashInAmount = null,
+  totalAmount = null,
+  items = []
 ) {
   const date = new Date();
   const orderNo = String(orderId).padStart(5, "0");
   const dateStr = date.toLocaleDateString();
   const timeStr = date.toLocaleTimeString();
-  const total = getCartTotal();
+  const total = totalAmount ?? getCartTotal(); // ✅ use passed amount if available
   const customerName = customerId ? `#${customerId}` : "Guest";
 
-  // Bill-wide discount
   const billDiscount = parseFloat(
     document.getElementById("billDiscount")?.value || 0
   );
 
-  // Set top-level placeholders
   document.getElementById("receiptOrderNumber").textContent = orderNo;
   document.getElementById("receiptCustomerId").textContent = customerName;
   document.getElementById("receiptDate").textContent = dateStr;
@@ -804,7 +1116,6 @@ function renderReceiptAndShopCopy(
     paymentMethod.toUpperCase();
   document.getElementById("receiptTotal").textContent = total.toFixed(2);
 
-  // 👇 Show bill-wide discount if any
   if (billDiscount > 0) {
     document.getElementById("receiptBillDiscountWrap").style.display = "block";
     document.getElementById("receiptBillDiscount").textContent = billDiscount;
@@ -812,11 +1123,11 @@ function renderReceiptAndShopCopy(
     document.getElementById("receiptBillDiscountWrap").style.display = "none";
   }
 
-  // === Receipt Body ===
+  // Receipt body
   const tbody = document.getElementById("receiptItemRows");
   tbody.innerHTML = "";
 
-  cartItems.forEach((item) => {
+  items.forEach((item) => {
     const discountText =
       item.discount && item.discount > 0
         ? `<br><small>Disc: ${item.discount}%</small>`
@@ -831,7 +1142,7 @@ function renderReceiptAndShopCopy(
     tbody.appendChild(tr);
   });
 
-  // === Shop Copy Section ===
+  // Shop copy
   document.getElementById("shopCopyOrderId").textContent = orderNo;
   document.getElementById("shopCopyDate").textContent = dateStr;
   document.getElementById("shopCopyCustomer").textContent = customerName;
@@ -847,12 +1158,31 @@ function renderReceiptAndShopCopy(
     document.getElementById("shopCopyCashInWrap").style.display = "none";
   }
 
-  // ✅ Show receipt modal
   document.getElementById("receiptModal").style.display = "flex";
 }
 
+
 function closeModal(id) {
   document.getElementById(id).style.display = "none";
+}
+
+function renderReturnReceiptAndShopCopy(returnData) {
+  document.getElementById("returnId").textContent = returnData.id;
+  document.getElementById("returnItemName").textContent =
+    returnData.inventory_name || "N/A";
+  document.getElementById("returnQty").textContent = returnData.quantity;
+  document.getElementById("returnPrice").textContent = `Rs. ${parseFloat(
+    returnData.price
+  ).toFixed(2)}`;
+  document.getElementById("returnRestocked").textContent = returnData.restock
+    ? "Yes"
+    : "No";
+  document.getElementById("returnDate").textContent = returnData.date;
+  document.getElementById("returnTime").textContent = returnData.time;
+  document.getElementById("returnProcessedBy").textContent =
+    returnData.processed_by || "POS Operator";
+
+  document.getElementById("returnReceiptModal").style.display = "flex";
 }
 
 //REPORT GENERATING
@@ -992,8 +1322,7 @@ async function getPaymentMethodSummary(sessionId) {
     const methodTotals = {};
     payments.forEach((p) => {
       const method = p.method;
-      methodTotals[method] =
-        (methodTotals[method] || 0) + parseFloat(p.amount);
+      methodTotals[method] = (methodTotals[method] || 0) + parseFloat(p.amount);
     });
 
     return methodTotals;
@@ -1002,7 +1331,6 @@ async function getPaymentMethodSummary(sessionId) {
     return {};
   }
 }
-
 
 // 🧮 Discount Report
 async function getDiscountReport(sessionId) {
@@ -1056,6 +1384,29 @@ async function getDiscountReport(sessionId) {
   }
 }
 
+// 🔁 Returns Report
+async function getReturnsReport(sessionId) {
+  try {
+    const res = await axios.get(`${returnApi}/session/${sessionId}`);
+    if (!res.data || res.data.length === 0) {
+      return { returns: "No returns recorded" };
+    }
+
+    return res.data.map((item) => ({
+      inventoryId: item.inventory_id,
+      quantity: item.quantity,
+      price: item.price,
+      restock: item.restock ? "Yes" : "No",
+      date: item.date,
+      time: item.time,
+      processedBy: item.processed_by,
+    }));
+  } catch (error) {
+    console.error("Error fetching returns report:", error);
+    return { returns: "Error generating returns report" };
+  }
+}
+
 // Function to generate CSV from report data
 function generateCSV() {
   const sessionId = currentSessionId; // Assuming the session ID is available
@@ -1069,6 +1420,7 @@ function generateCSV() {
     getCashMovementReport(sessionId),
     getPaymentMethodSummary(sessionId),
     getDiscountReport(sessionId),
+    getReturnsReport(sessionId),
   ])
     .then((results) => {
       // Extract values, providing fallbacks for rejected promises
@@ -1079,15 +1431,38 @@ function generateCSV() {
         cashMovementResult,
         paymentMethodSummaryResult,
         discountReportResult,
+        returnsReportResult,
       ] = results;
 
       // Safely extract data or use fallbacks
-      const dailySales = dailySalesResult.status === 'fulfilled' ? dailySalesResult.value : { summary: "No data available" };
-      const detailedTransactions = detailedTransactionsResult.status === 'fulfilled' ? detailedTransactionsResult.value : { details: "No data available" };
-      const soldItems = soldItemsResult.status === 'fulfilled' ? soldItemsResult.value : { breakdown: "No data available" };
-      const cashMovement = cashMovementResult.status === 'fulfilled' ? cashMovementResult.value : { cashMovements: "No data available" };
-      const paymentMethodSummary = paymentMethodSummaryResult.status === 'fulfilled' ? paymentMethodSummaryResult.value : { summary: "No data available" };
-      const discountReport = discountReportResult.status === 'fulfilled' ? discountReportResult.value : { discounts: "No data available" };
+      const dailySales =
+        dailySalesResult.status === "fulfilled"
+          ? dailySalesResult.value
+          : { summary: "No data available" };
+      const detailedTransactions =
+        detailedTransactionsResult.status === "fulfilled"
+          ? detailedTransactionsResult.value
+          : { details: "No data available" };
+      const soldItems =
+        soldItemsResult.status === "fulfilled"
+          ? soldItemsResult.value
+          : { breakdown: "No data available" };
+      const cashMovement =
+        cashMovementResult.status === "fulfilled"
+          ? cashMovementResult.value
+          : { cashMovements: "No data available" };
+      const paymentMethodSummary =
+        paymentMethodSummaryResult.status === "fulfilled"
+          ? paymentMethodSummaryResult.value
+          : { summary: "No data available" };
+      const discountReport =
+        discountReportResult.status === "fulfilled"
+          ? discountReportResult.value
+          : { discounts: "No data available" };
+      const returnsReport =
+        returnsReportResult.status === "fulfilled"
+          ? returnsReportResult.value
+          : { returns: "No data available" };
 
       // Prepare the CSV data
       let csvData = [];
@@ -1095,7 +1470,10 @@ function generateCSV() {
       // 🧾 Daily Sales Summary Report
       csvData.push("Daily Sales Summary Report");
       csvData.push("Total Orders,Items Sold,Total Revenue,Total Discount");
-      if (dailySales.totalOrders !== undefined && dailySales.itemsSold !== undefined) {
+      if (
+        dailySales.totalOrders !== undefined &&
+        dailySales.itemsSold !== undefined
+      ) {
         csvData.push(
           `${dailySales.totalOrders},${dailySales.itemsSold},${dailySales.totalRevenue},${dailySales.totalDiscount}`
         );
@@ -1107,10 +1485,17 @@ function generateCSV() {
       // 🛍️ Detailed Sales Transactions
       csvData.push("Detailed Sales Transactions");
       csvData.push("Order ID,Customer,Date,Time,Total,Discount");
-      if (Array.isArray(detailedTransactions) && detailedTransactions.length > 0) {
+      if (
+        Array.isArray(detailedTransactions) &&
+        detailedTransactions.length > 0
+      ) {
         detailedTransactions.forEach((order) => {
           csvData.push(
-            `${order.id || "N/A"},${order.customer || "N/A"},${order.date || "N/A"},${order.time || "N/A"},${order.total || "0.00"},${order.discount || "0.00"}`
+            `${order.id || "N/A"},${order.customer || "N/A"},${
+              order.date || "N/A"
+            },${order.time || "N/A"},${order.total || "0.00"},${
+              order.discount || "0.00"
+            }`
           );
         });
       } else {
@@ -1124,7 +1509,9 @@ function generateCSV() {
       if (Array.isArray(soldItems) && soldItems.length > 0) {
         soldItems.forEach((item) => {
           csvData.push(
-            `${item.inventoryId || "N/A"},${item.price || "0.00"},${item.quantity || "0"},${item.discount || "0.00"}`
+            `${item.inventoryId || "N/A"},${item.price || "0.00"},${
+              item.quantity || "0"
+            },${item.discount || "0.00"}`
           );
         });
       } else {
@@ -1138,7 +1525,9 @@ function generateCSV() {
       if (Array.isArray(cashMovement) && cashMovement.length > 0) {
         cashMovement.forEach((entry) => {
           csvData.push(
-            `${entry.type || "N/A"},${entry.reason || "N/A"},${entry.amount || "0.00"},${entry.date || "N/A"},${entry.time || "N/A"}`
+            `${entry.type || "N/A"},${entry.reason || "N/A"},${
+              entry.amount || "0.00"
+            },${entry.date || "N/A"},${entry.time || "N/A"}`
           );
         });
       } else {
@@ -1149,9 +1538,14 @@ function generateCSV() {
       // 💳 Payment Method Summary
       csvData.push("Payment Method Summary");
       csvData.push("Payment Method,Amount");
-      if (paymentMethodSummary && typeof paymentMethodSummary === 'object' && Object.keys(paymentMethodSummary).length > 0) {
+      if (
+        paymentMethodSummary &&
+        typeof paymentMethodSummary === "object" &&
+        Object.keys(paymentMethodSummary).length > 0
+      ) {
         for (const method in paymentMethodSummary) {
-          if (method !== 'summary') { // Skip the summary property if it exists
+          if (method !== "summary") {
+            // Skip the summary property if it exists
             const amount = parseFloat(paymentMethodSummary[method]);
             // Check if the amount is a valid number
             if (!isNaN(amount)) {
@@ -1168,36 +1562,66 @@ function generateCSV() {
 
       // 🧮 Discount Report
       csvData.push("Discount Report");
-      csvData.push("Order ID,Discount,Total (Order Level),Item ID,Item Discount,Subtotal (Item Level)");
-      
+      csvData.push(
+        "Order ID,Discount,Total (Order Level),Item ID,Item Discount,Subtotal (Item Level)"
+      );
+
       // Handle potential undefined or non-array structure for discount report
-      const billWideDiscounts = discountReport && Array.isArray(discountReport.billWideDiscounts) 
-        ? discountReport.billWideDiscounts 
-        : [];
-        
-      const itemLevelDiscounts = discountReport && Array.isArray(discountReport.itemLevelDiscounts) 
-        ? discountReport.itemLevelDiscounts 
-        : [];
+      const billWideDiscounts =
+        discountReport && Array.isArray(discountReport.billWideDiscounts)
+          ? discountReport.billWideDiscounts
+          : [];
+
+      const itemLevelDiscounts =
+        discountReport && Array.isArray(discountReport.itemLevelDiscounts)
+          ? discountReport.itemLevelDiscounts
+          : [];
 
       if (billWideDiscounts.length > 0) {
         billWideDiscounts.forEach((discount) => {
           csvData.push(
-            `${discount.orderId || "N/A"},${discount.discount || "0.00"},${discount.total || "0.00"},,`
+            `${discount.orderId || "N/A"},${discount.discount || "0.00"},${
+              discount.total || "0.00"
+            },,`
           );
         });
       }
-      
+
       if (itemLevelDiscounts.length > 0) {
         itemLevelDiscounts.forEach((discount) => {
           csvData.push(
-            `, , ,${discount.itemId || "N/A"},${discount.discount || "0.00"},${discount.subtotal || "0.00"}`
+            `, , ,${discount.itemId || "N/A"},${discount.discount || "0.00"},${
+              discount.subtotal || "0.00"
+            }`
           );
         });
       }
-      
+
       if (billWideDiscounts.length === 0 && itemLevelDiscounts.length === 0) {
         csvData.push("No Data,No Data,No Data,No Data,No Data,No Data");
       }
+
+      // 🔁 Returns Report
+      csvData.push("Returns Report");
+      csvData.push(
+        "Inventory ID,Quantity,Price,Restock,Date,Time,Processed By"
+      );
+
+      if (Array.isArray(returnsReport) && returnsReport.length > 0) {
+        returnsReport.forEach((item) => {
+          csvData.push(
+            `${item.inventoryId || "N/A"},${item.quantity || "0"},${
+              item.price || "0.00"
+            },${item.restock || "No"},${item.date || "N/A"},${
+              item.time || "N/A"
+            },${item.processedBy || "N/A"}`
+          );
+        });
+      } else {
+        csvData.push("No Data,No Data,No Data,No Data,No Data,No Data,No Data");
+      }
+
+      csvData.push(""); // Blank line between sections
 
       // Convert array to CSV string
       const csvString = csvData.join("\n");
@@ -1211,7 +1635,7 @@ function generateCSV() {
     })
     .catch((err) => {
       console.error("❌ Error generating CSV report:", err);
-      
+
       // Even if something fails completely, generate a basic report
       let csvData = [
         "POS Report - Error Encountered",
@@ -1228,22 +1652,22 @@ function generateCSV() {
         "No Data,No Data,No Data,No Data,No Data,No Data",
         "",
         "Sold Items Breakdown",
-        "Inventory ID,Price,Quantity,Discount", 
+        "Inventory ID,Price,Quantity,Discount",
         "No Data,No Data,No Data,No Data",
         "",
         "Cash Movement Report",
         "Type,Reason,Amount,Date,Time",
         "No Data,No Data,No Data,No Data,No Data",
         "",
-        "Payment Method Summary", 
+        "Payment Method Summary",
         "Payment Method,Amount",
         "No Data,No Data",
         "",
         "Discount Report",
         "Order ID,Discount,Total (Order Level),Item ID,Item Discount,Subtotal (Item Level)",
-        "No Data,No Data,No Data,No Data,No Data,No Data"
+        "No Data,No Data,No Data,No Data,No Data,No Data",
       ];
-      
+
       // Convert array to CSV string
       const csvString = csvData.join("\n");
 
@@ -1253,7 +1677,9 @@ function generateCSV() {
       link.href = URL.createObjectURL(blob);
       link.download = `POS_Report_ERROR_${new Date().toLocaleDateString()}.csv`;
       link.click();
-      
-      alert("There was an error generating the complete report. A basic report structure has been downloaded.");
+
+      alert(
+        "There was an error generating the complete report. A basic report structure has been downloaded."
+      );
     });
 }

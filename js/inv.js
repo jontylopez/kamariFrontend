@@ -246,14 +246,24 @@ async function handleSubmit(e) {
   const color = document.getElementById("inventoryColor").value.trim();
   const description = document.getElementById("inventoryDesc").value.trim();
   const quantity = parseInt(document.getElementById("inventoryQuantity").value);
-  const buy_price = parseFloat(
-    document.getElementById("inventoryBuyPrice").value
-  );
-  const sell_price = parseFloat(
-    document.getElementById("inventorySellPrice").value
-  );
-  const message = document.getElementById("formMessage"); // ✅ Use a separate div
+  const buy_price = parseFloat(document.getElementById("inventoryBuyPrice").value);
+  const sell_price = parseFloat(document.getElementById("inventorySellPrice").value);
+  const message = document.getElementById("formMessage");
 
+  // ✅ Duplicate Check
+  const isDuplicate = allInventory.some((inv) =>
+    inv.name === name &&
+    inv.productId === productId &&
+    inv.supBrId === supBrId &&
+    inv.size === size &&
+    inv.color.toLowerCase() === color.toLowerCase() &&
+    (inv.description || "").toLowerCase() === description.toLowerCase()
+  );
+
+  if (isDuplicate) {
+    message.textContent = "❌ This inventory item already exists.";
+    return;
+  }
   try {
     const genderCode =
       gender === "female" ? "W" : gender === "male" ? "M" : "U";

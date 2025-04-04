@@ -1,268 +1,421 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>POS | Kamari</title>
-  <link rel="stylesheet" href="css/pos.css" />
-  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
-  <link rel="icon" type="image/x-icon" href="/images/favicon.ico">
-</head>
-<body>
-  <header>
-    <h1>Kamari POS</h1>
-    <a href="index.html">Back to Dashboard</a>
-  </header>
+  <head>
+    <meta charset="UTF-8" />
+    <title>POS | Kamari</title>
+    <link rel="stylesheet" href="css/pos.css" />
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <link rel="icon" type="image/x-icon" href="/images/favicon.ico" />
+  </head>
+  <body>
+    <header>
+      <h1>Kamari POS</h1>
+      <a href="index.html">Back to Dashboard</a>
+    </header>
 
-  <main class="pos-layout">
-    <aside class="left-panel">
-     
-
-      <div class="cart-header">
-        <h3>Order #<span id="orderNumber">001</span></h3>
-        <button id="clearCartBtn">Clear All</button>
-      </div>
-
-      <div id="cartList" class="scanned-items"></div>
-
-      <div class="cart-footer">
-        <div class="bill-discount-area">
-          <label for="billDiscount">Total Discount (%):</label>
-          <input type="number" id="billDiscount" min="0" max="100" value="0" onchange="renderCart()" />
+    <main class="pos-layout">
+      <aside class="left-panel">
+        <div class="cart-header">
+          <h3>Order #<span id="orderNumber">001</span></h3>
+          <button id="clearCartBtn">Clear All</button>
         </div>
-        
-        <div class="cart-total">Total: Rs <span id="totalAmount">0.00</span></div>
-        <button id="checkoutBtn">Proceed to Payment</button>
+
+        <div id="cartList" class="scanned-items"></div>
+
+        <div class="cart-footer">
+          <div class="bill-discount-area">
+            <label for="billDiscount">Total Discount (%):</label>
+            <input
+              type="number"
+              id="billDiscount"
+              min="0"
+              max="100"
+              value="0"
+              onchange="renderCart()"
+            />
+          </div>
+
+          <div class="cart-total">
+            Total: Rs <span id="totalAmount">0.00</span>
+          </div>
+          <button id="checkoutBtn">Proceed to Payment</button>
+        </div>
+      </aside>
+
+      <section class="right-panel">
+        <div class="session-status">
+          <button id="startDayBtn" class="always-enabled">Start Day</button>
+
+          <button id="closeDayBtn" disabled>Close Day</button>
+        </div>
+        <div id="sessionStatus"></div>
+        <div class="cash-buttons">
+          <button id="cashInBtn">➕ Cash In</button>
+          <button id="cashOutBtn">➖ Cash Out</button>
+          <button id="exchangeBtn">🔁 Exchange</button>
+        </div>
+        <div class="barcode-section">
+          <input
+            type="text"
+            id="barcodeInput"
+            placeholder="Scan or type barcode here..."
+            autofocus
+          />
+        </div>
+
+        <div class="category-buttons">
+          <button class="category active">All</button>
+          <button class="category">Upper Body</button>
+          <button class="category">Lower Body</button>
+          <button class="category">Others</button>
+        </div>
+
+        <div id="productGrid" class="product-grid"></div>
+      </section>
+    </main>
+
+    <!-- Price Selection Modal -->
+    <div id="priceSelectModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <h3>Select Sell Price</h3>
+        <p id="priceModalProductName"></p>
+        <div id="priceOptions"></div>
+        <button onclick="closeModal('priceSelectModal')">Cancel</button>
       </div>
-    </aside>
+    </div>
 
-    <section class="right-panel">
-      <div class="session-status">
-        <button id="startDayBtn" class="always-enabled">Start Day</button>
+    <!-- Customer Prompt Modal -->
+    <div id="customerModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <h2>Customer Info</h2>
+        <label for="customerPhone">Mobile Number:</label>
+        <input type="text" id="customerPhone" placeholder="07XXXXXXXX" />
 
-        <button id="closeDayBtn" disabled>Close Day</button>
-        
+        <div id="newCustomerFields" style="display: none">
+          <label for="customerName">Name:</label>
+          <input type="text" id="customerName" placeholder="Full Name" />
+
+          <label for="customerEmail">Email:</label>
+          <input type="email" id="customerEmail" placeholder="Email" />
+          <button id="registerCustomerBtn">Register</button>
+        </div>
+
+        <button id="searchCustomerBtn">Search</button>
+        <button id="skipCustomerBtn">Skip</button>
       </div>
-      <div id="sessionStatus"></div>
-      <div class="cash-buttons">
-        <button id="cashInBtn">➕ Cash In</button>
-        <button id="cashOutBtn">➖ Cash Out</button>
+    </div>
+
+    <!-- Payment Method Modal -->
+    <div id="paymentModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <h2>Select Payment Method</h2>
+        <button onclick="handlePaymentMethod('cash')">💵 Cash</button>
+        <button onclick="handlePaymentMethod('card')">💳 Card</button>
+        <button onclick="handlePaymentMethod('bank')">🏦 Bank Transfer</button>
+        <button onclick="handlePaymentMethod('ex')">🔁 Exchange</button>
+        <button onclick="handlePaymentMethod('qr')">📱 QR</button>
+        <button onclick="handlePaymentMethod('voucher')">🎫 Voucher</button>
+        <button onclick="closeModal('paymentModal')">Cancel</button>
       </div>
-      <div class="barcode-section">
-        <input type="text" id="barcodeInput" placeholder="Scan or type barcode here..." autofocus />
+    </div>
+
+    <!-- Cash Transaction Modal -->
+    <div id="cashTrModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <h2 id="cashTrTitle">Cash Transaction</h2>
+
+        <label for="cashTrAmount">Amount:</label>
+        <input type="number" id="cashTrAmount" placeholder="Enter amount" />
+
+        <label for="cashTrReason">Reason:</label>
+        <input type="text" id="cashTrReason" placeholder="Enter reason" />
+
+        <div class="modal-actions">
+          <button id="submitCashTrBtn">Submit</button>
+          <button onclick="closeModal('cashTrModal')">Cancel</button>
+        </div>
       </div>
+    </div>
 
-      <div class="category-buttons">
-        <button class="category active">All</button>
-        <button class="category">Upper Body</button>
-        <button class="category">Lower Body</button>
-        <button class="category">Others</button>
+    <!-- Cash Modal -->
+    <div id="cashModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <h2>Cash Payment</h2>
+        <p><strong>Total:</strong> Rs <span id="cashDueTotal">0.00</span></p>
+
+        <label for="cashInAmount">Cash In:</label>
+        <input
+          type="number"
+          id="cashInAmount"
+          placeholder="Enter received amount"
+        />
+
+        <p><strong>Balance:</strong> Rs <span id="liveBalance">0.00</span></p>
+
+        <div class="modal-actions">
+          <button id="validateCashBtn">✅ Validate</button>
+          <button onclick="closeModal('cashModal')">⬅ Back</button>
+        </div>
       </div>
-
-      <div id="productGrid" class="product-grid"></div>
-    </section>
-  </main>
-
-  
-
-<!-- Price Selection Modal -->
-<div id="priceSelectModal" class="modal" style="display: none;">
-  <div class="modal-content">
-    <h3>Select Sell Price</h3>
-    <p id="priceModalProductName"></p>
-    <div id="priceOptions"></div>
-    <button onclick="closeModal('priceSelectModal')">Cancel</button>
-  </div>
-</div>
-
-
-  <!-- Customer Prompt Modal -->
-<div id="customerModal" class="modal" style="display: none;">
-  <div class="modal-content">
-    <h2>Customer Info</h2>
-    <label for="customerPhone">Mobile Number:</label>
-    <input type="text" id="customerPhone" placeholder="07XXXXXXXX">
-
-    <div id="newCustomerFields" style="display: none;">
-      <label for="customerName">Name:</label>
-      <input type="text" id="customerName" placeholder="Full Name">
-
-      <label for="customerEmail">Email:</label>
-      <input type="email" id="customerEmail" placeholder="Email">
-      <button id="registerCustomerBtn">Register</button>
     </div>
 
-    <button id="searchCustomerBtn">Search</button>
-    <button id="skipCustomerBtn">Skip</button>
-  </div>
-</div>
+    <!-- Card Payment Modal -->
+    <div id="cardModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <h2>Card Payment</h2>
+        <p><strong>Total:</strong> Rs <span id="cardDueTotal">0.00</span></p>
+        <!-- Inside cardModal -->
+        <p>Total: Rs <span id="cardDueTotal">0.00</span></p>
+        <button id="cardConfirmBtn">💳 Confirm Card Payment</button>
 
-  <!-- Payment Method Modal -->
-  <div id="paymentModal" class="modal" style="display: none;">
-    <div class="modal-content">
-      <h2>Select Payment Method</h2>
-      <button onclick="handlePaymentMethod('cash')">💵 Cash</button>
-      <button onclick="handlePaymentMethod('card')">💳 Card</button>
-      <button onclick="handlePaymentMethod('qr')">📱 QR</button>
-      <button onclick="handlePaymentMethod('voucher')">🎫 Voucher</button>
-      <button onclick="closeModal('paymentModal')">Cancel</button>
+        <div class="modal-actions">
+          <button id="cardSuccessBtn">✅ Payment Success</button>
+          <button onclick="closeModal('cardModal')">⬅ Back</button>
+        </div>
+      </div>
     </div>
-  </div>
-
- <!-- Cash Transaction Modal -->
-<div id="cashTrModal" class="modal" style="display: none;">
-  <div class="modal-content">
-    <h2 id="cashTrTitle">Cash Transaction</h2>
-
-    <label for="cashTrAmount">Amount:</label>
-    <input type="number" id="cashTrAmount" placeholder="Enter amount" />
-
-    <label for="cashTrReason">Reason:</label>
-    <input type="text" id="cashTrReason" placeholder="Enter reason" />
-
-    <div class="modal-actions">
-      <button id="submitCashTrBtn">Submit</button>
-      <button onclick="closeModal('cashTrModal')">Cancel</button>
+    <!-- Exchange Cash Modal -->
+    <div id="exchangeCashModal" class="modal">
+      <div class="modal-content">
+        <h3>💰 Exchange Cash Payment</h3>
+        <p>Due Amount: Rs <span id="exchangeDueAmount">0.00</span></p>
+        <input type="number" id="exchangeCashIn" placeholder="Enter Cash In" />
+        <p>Balance: Rs <span id="exchangeCashBalance">0.00</span></p>
+        <button id="validateExchangeCashBtn">Validate</button>
+        <button id="confirmExchangeCashPaymentBtn" style="display: none">
+          Confirm & Print
+        </button>
+        <button onclick="closeModal('exchangeCashModal')">Cancel</button>
+      </div>
     </div>
-  </div>
-</div>
 
+    <!-- Exchange Payment Modal -->
+    <div id="exchangePayModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <h2>Exchange Payment</h2>
+        <label for="exchangeIdInput">Enter Exchange ID:</label>
+        <input type="number" id="exchangeIdInput" placeholder="e.g. 123" />
 
+        <div id="exchangePaymentDetails" style="margin-top: 10px"></div>
 
-
-<!-- Cash Modal -->
-<div id="cashModal" class="modal" style="display: none;">
-  <div class="modal-content">
-    <h2>Cash Payment</h2>
-    <p><strong>Total:</strong> Rs <span id="cashDueTotal">0.00</span></p>
-
-    <label for="cashInAmount">Cash In:</label>
-    <input type="number" id="cashInAmount" placeholder="Enter received amount" />
-
-    <p><strong>Balance:</strong> Rs <span id="liveBalance">0.00</span></p>
-
-    <div class="modal-actions">
-      <button id="validateCashBtn">✅ Validate</button>
-      <button onclick="closeModal('cashModal')">⬅ Back</button>
+        <div class="modal-actions" id="exchangePaymentActions"></div>
+        <button onclick="closeModal('exchangePayModal')">Cancel</button>
+      </div>
     </div>
-  </div>
-</div>
 
+    <!-- QR Payment Modal -->
+    <div id="qrModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <h2>QR Payment</h2>
+        <p>This feature is <strong>not available</strong> yet.</p>
 
-
-<!-- Card Payment Modal -->
-<div id="cardModal" class="modal" style="display: none;">
-  <div class="modal-content">
-    <h2>Card Payment</h2>
-    <p><strong>Total:</strong> Rs <span id="cardDueTotal">0.00</span></p>
-
-    <div class="modal-actions">
-      <button id="cardSuccessBtn">✅ Payment Success</button>
-      <button onclick="closeModal('cardModal')">⬅ Back</button>
+        <div class="modal-actions">
+          <button onclick="closeModal('qrModal')">⬅ Back</button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<!-- QR Payment Modal -->
-<div id="qrModal" class="modal" style="display: none;">
-  <div class="modal-content">
-    <h2>QR Payment</h2>
-    <p>This feature is <strong>not available</strong> yet.</p>
+    <!-- Voucher Payment Modal -->
+    <div id="voucherModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <h2>Voucher Payment</h2>
+        <p>This feature is <strong>not available</strong> yet.</p>
 
-    <div class="modal-actions">
-      <button onclick="closeModal('qrModal')">⬅ Back</button>
+        <div class="modal-actions">
+          <button onclick="closeModal('voucherModal')">⬅ Back</button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<!-- Voucher Payment Modal -->
-<div id="voucherModal" class="modal" style="display: none;">
-  <div class="modal-content">
-    <h2>Voucher Payment</h2>
-    <p>This feature is <strong>not available</strong> yet.</p>
+    <!--Exchange Modal-->
+    <div id="exchangeModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <h2>Exchange Item</h2>
 
-    <div class="modal-actions">
-      <button onclick="closeModal('voucherModal')">⬅ Back</button>
+        <label for="exchangeBarcode">Scan Barcode:</label>
+        <input type="text" id="exchangeBarcode" placeholder="Scan barcode..." />
+
+        <div id="exchangePriceOptions" style="margin: 10px 0"></div>
+
+        <label for="exchangeQuantity">Quantity:</label>
+        <input type="number" id="exchangeQuantity" value="1" min="1" />
+
+        <label>Restock this item?</label>
+        <select id="exchangeRestock">
+          <option value="true">Yes</option>
+          <option value="false">No</option>
+        </select>
+
+        <button id="submitExchangeBtn">Confirm Exchange</button>
+        <button onclick="closeModal('exchangeModal')">Cancel</button>
+      </div>
     </div>
-  </div>
-</div>
 
-<div id="receiptModal" class="modal" style="display: none;">
-  <div id="receiptCombinedWrapper">
+    <!-- Exchange Card Modal -->
+    <div id="exchangeCardModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <h3>💳 Confirm Card Payment</h3>
+        <p>
+          Please confirm the card payment of
+          <strong>Rs <span id="exchangeCardAmount">0.00</span></strong> was
+          successful.
+        </p>
+        <div class="modal-actions">
+          <button id="confirmExchangeCardBtn">✅ Confirm</button>
+          <button onclick="closeModal('exchangeCardModal')">❌ Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Return Receipt & Shop Copy Modal -->
+    <div id="returnReceiptModal" class="modal">
+      <div class="receipt-container">
+        <!-- Customer Copy -->
+        <div class="receipt-copy">
+          <h2>Return Receipt</h2>
+          <p><strong>Return ID:</strong> <span id="returnId"></span></p>
+          <p><strong>Item:</strong> <span id="returnItemName"></span></p>
+          <p><strong>Quantity:</strong> <span id="returnQty"></span></p>
+          <p><strong>Price:</strong> Rs. <span id="returnPrice"></span></p>
+          <p><strong>Total:</strong> Rs. <span id="returnTotal"></span></p>
+          <p><strong>Date:</strong> <span id="returnDate"></span></p>
+          <p><strong>Time:</strong> <span id="returnTime"></span></p>
+          <p>
+            <strong>Processed By:</strong> <span id="returnProcessedBy"></span>
+          </p>
+          <p style="text-align: center">Thank you!</p>
+        </div>
+
+        <hr class="divider" />
+
+        <!-- Shop Copy -->
+        <div class="receipt-copy">
+          <h2>Shop Copy</h2>
+          <p><strong>Return ID:</strong> <span id="shopReturnId"></span></p>
+          <p><strong>Item:</strong> <span id="shopReturnItem"></span></p>
+          <p><strong>Quantity:</strong> <span id="shopReturnQty"></span></p>
+          <p><strong>Price:</strong> Rs. <span id="shopReturnPrice"></span></p>
+          <p><strong>Total:</strong> Rs. <span id="shopReturnTotal"></span></p>
+          <p>
+            <strong>Restocked:</strong> <span id="shopReturnRestocked"></span>
+          </p>
+          <p><strong>Date:</strong> <span id="shopReturnDate"></span></p>
+          <p><strong>Time:</strong> <span id="shopReturnTime"></span></p>
+          <p>
+            <strong>Processed By:</strong>
+            <span id="shopReturnProcessedBy"></span>
+          </p>
+          <p style="text-align: center">Internal Record</p>
+        </div>
+
+        <div class="receipt-actions">
+          <button onclick="printReceipt('returnReceiptModal')">🖨️ Print</button>
+          <button onclick="closeModal('returnReceiptModal')">❌ Close</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="receiptModal" class="modal" style="display: none">
+      <div id="receiptCombinedWrapper">
         <!-- Print and Close buttons -->
-        <div style="text-align:center; margin: 15px 0;">
-          <button onclick="window.print()" class="print-btn">🖨️ Print Receipt</button>
+        <div style="text-align: center; margin: 15px 0">
+          <button onclick="printReceipt('receiptModal')" class="print-btn">
+            🖨️ Print Receipt
+          </button>
           <button onclick="closeModal('receiptModal')">Close</button>
         </div>
-    <!-- Customer Receipt -->
-    <div class="receipt-wrapper" id="receiptContent">
-      <!-- HEADER -->
-      <div class="receipt-header">
-        <img src="images/bill-logo.jpg" class="logo" />
-        <div class="slogan">A R T O F L U X U R Y</div>
-        <p><strong>Order:</strong> #<span id="receiptOrderNumber"></span></p>
-        <p><strong>Customer:</strong> <span id="receiptCustomerId"></span></p>
-        <p><strong>Date:</strong> <span id="receiptDate"></span> | Time: <span id="receiptTime"></span></p>
-      </div>
-  
-      <!-- BODY -->
-      <div class="receipt-body">
-        <table class="receipt-table">
-          <thead>
-            <tr>
-              <th>Item</th>
-              <th>Qty</th>
-              <th>Rate</th>
-              <th>Sub</th>
-            </tr>
-          </thead>
-          <tbody id="receiptItemRows">
-            <!-- Items injected by JS -->
-          </tbody>
-        </table>
-      </div>
-      
-      <div class="totals">
-        <p><strong>Payment Method:</strong> <span id="receiptPaymentMethod"></span></p>
-        <p id="receiptBillDiscountWrap" style="display: none;"><strong>Bill Discount:</strong> <span id="receiptBillDiscount"></span>%</p>        
-        <p><strong>Total:</strong> Rs <span id="receiptTotal"></span></p>
-      </div>
-      
-      <!-- FOOTER -->
-      <div class="receipt-footer">
-        <div class="receipt-address">Kamari Clothing, 123 Luxury Street, Colombo 07</div>
-        <div class="receipt-contact">Call: +94 77 123 4567 | Email: info@kamari.lk</div>
-        <div class="receipt-social">
-          <img src="images/icons/fb.png" alt="Facebook" />
-          <img src="images/icons/ig.png" alt="Instagram" />
-          <img src="images/icons/x.png" alt="X" />
-          <img src="images/icons/tiktok.png" alt="TikTok" />
+        <!-- Customer Receipt -->
+        <div class="receipt-wrapper" id="receiptContent">
+          <!-- HEADER -->
+          <div class="receipt-header">
+            <img src="images/bill-logo.jpg" class="logo" />
+            <div class="slogan">A R T O F L U X U R Y</div>
+            <p>
+              <strong>Order:</strong> #<span id="receiptOrderNumber"></span>
+            </p>
+            <p>
+              <strong>Customer:</strong> <span id="receiptCustomerId"></span>
+            </p>
+            <p>
+              <strong>Date:</strong> <span id="receiptDate"></span> | Time:
+              <span id="receiptTime"></span>
+            </p>
+          </div>
+
+          <!-- BODY -->
+          <div class="receipt-body">
+            <table class="receipt-table">
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Qty</th>
+                  <th>Rate</th>
+                  <th>Sub</th>
+                </tr>
+              </thead>
+              <tbody id="receiptItemRows">
+                <!-- Items injected by JS -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="totals">
+            <p>
+              <strong>Payment Method:</strong>
+              <span id="receiptPaymentMethod"></span>
+            </p>
+            <p id="receiptBillDiscountWrap" style="display: none">
+              <strong>Bill Discount:</strong>
+              <span id="receiptBillDiscount"></span>%
+            </p>
+            <p><strong>Total:</strong> Rs <span id="receiptTotal"></span></p>
+          </div>
+
+          <!-- FOOTER -->
+          <div class="receipt-footer">
+            <div class="receipt-address">
+              Kamari Clothing, 123 Luxury Street, Colombo 07
+            </div>
+            <div class="receipt-contact">
+              Call: +94 77 123 4567 | Email: info@kamari.lk
+            </div>
+            <div class="receipt-social">
+              <img src="images/icons/fb.png" alt="Facebook" />
+              <img src="images/icons/ig.png" alt="Instagram" />
+              <img src="images/icons/x.png" alt="X" />
+              <img src="images/icons/tiktok.png" alt="TikTok" />
+            </div>
+            <div class="qr-area">[QR CODE HERE]</div>
+          </div>
         </div>
-        <div class="qr-area">[QR CODE HERE]</div>
+
+        <!-- Dotted separation line between receipts -->
+        <div style="border-top: 2px dashed #000; margin: 10px 0"></div>
+
+        <!-- Shop Copy -->
+        <div class="shop-copy-content" id="shopCopyContent">
+          <h2>Kamari POS - Shop Copy</h2>
+          <div class="copy-details">
+            <p><strong>Order #:</strong> <span id="shopCopyOrderId"></span></p>
+            <p><strong>Date:</strong><span id="shopCopyDate"></span></p>
+            <p>
+              <strong>Customer:</strong> <span id="shopCopyCustomer"></span>
+            </p>
+            <p>
+              <strong>Payment Method:</strong> <span id="shopCopyMethod"></span>
+            </p>
+            <p>
+              <strong>Total Amount:</strong> Rs <span id="shopCopyTotal"></span>
+            </p>
+            <p id="shopCopyCashInWrap" style="display: none">
+              <strong>Cash In:</strong> Rs <span id="shopCopyCashIn"></span>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
-    
-    <!-- Dotted separation line between receipts -->
-    <div style="border-top: 2px dashed #000; margin: 10px 0;"></div>
-    
-    <!-- Shop Copy -->
-    <div class="shop-copy-content" id="shopCopyContent">
-      <h2>Kamari POS - Shop Copy</h2>
-      <div class="copy-details">
-        <p><strong>Order #:</strong> <span id="shopCopyOrderId"></span></p>
-        <p><strong>Date:</strong><span id="shopCopyDate"></span></p>
-        <p><strong>Customer:</strong> <span id="shopCopyCustomer"></span></p>
-        <p><strong>Payment Method:</strong> <span id="shopCopyMethod"></span></p>
-        <p><strong>Total Amount:</strong> Rs <span id="shopCopyTotal"></span></p>
-        <p id="shopCopyCashInWrap" style="display:none;"><strong>Cash In:</strong> Rs <span id="shopCopyCashIn"></span></p>
-      </div>
-    </div>
 
-
-  </div>
-</div>
-
-
-  <script src="js/pos.js"></script>
-</body>
+    <script src="js/pos.js"></script>
+  </body>
 </html>
