@@ -91,10 +91,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       try {
         const inv = (await axios.get(`${inventoryApi}/barcode/${code}`)).data;
-        const product = (await axios.get(`${productApi}/${inv.productId}`))
+        const product = (await axios.get(`${productApi}/${inv.product_id}`))
           .data;
         const allStocks = (await axios.get(stockApi)).data;
-        const stockOptions = allStocks.filter((s) => s.inventoryId === inv.id);
+        const stockOptions = allStocks.filter((s) => s.inventory_id === inv.id);
 
         const container = document.getElementById("exchangePriceOptions");
         container.innerHTML = "";
@@ -653,12 +653,12 @@ async function handleBarcodeScan(e) {
     const inv = (await axios.get(`${inventoryApi}/barcode/${code}`)).data;
 
     // Get product name (optional for display, inv.name is enough)
-    const product = (await axios.get(`${productApi}/${inv.productId}`)).data;
+    const product = (await axios.get(`${productApi}/${inv.product_id}`)).data;
 
     // Fetch stock movements and filter relevant ones
     const allStocks = (await axios.get(stockApi)).data;
     const validStocks = allStocks.filter(
-      (s) => s.inventoryId === inv.id && s.quantity > 0
+      (s) => s.inventory_id === inv.id && s.quantity > 0
     );
 
     if (validStocks.length === 0) {
@@ -1258,7 +1258,7 @@ async function getSoldItemsBreakdown(sessionId) {
         // If the item doesn't exist in the grouped object, initialize it
         if (!grouped[key]) {
           grouped[key] = {
-            inventoryId: item.inventory_id,
+            inventory_id: item.inventory_id,
             price: item.price,
             quantity: 0,
             discount: item.discount,
@@ -1393,7 +1393,7 @@ async function getReturnsReport(sessionId) {
     }
 
     return res.data.map((item) => ({
-      inventoryId: item.inventory_id,
+      inventory_id: item.inventory_id,
       quantity: item.quantity,
       price: item.price,
       restock: item.restock ? "Yes" : "No",
@@ -1509,7 +1509,7 @@ function generateCSV() {
       if (Array.isArray(soldItems) && soldItems.length > 0) {
         soldItems.forEach((item) => {
           csvData.push(
-            `${item.inventoryId || "N/A"},${item.price || "0.00"},${
+            `${item.inventory_id || "N/A"},${item.price || "0.00"},${
               item.quantity || "0"
             },${item.discount || "0.00"}`
           );
@@ -1610,7 +1610,7 @@ function generateCSV() {
       if (Array.isArray(returnsReport) && returnsReport.length > 0) {
         returnsReport.forEach((item) => {
           csvData.push(
-            `${item.inventoryId || "N/A"},${item.quantity || "0"},${
+            `${item.inventory_id || "N/A"},${item.quantity || "0"},${
               item.price || "0.00"
             },${item.restock || "No"},${item.date || "N/A"},${
               item.time || "N/A"

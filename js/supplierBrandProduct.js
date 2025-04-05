@@ -119,8 +119,8 @@ async function loadSuppliers() {
     table.innerHTML = "";
   
     combinations.forEach((cb) => {
-      const sup = suppliers.find(s => s.id === cb.supId);
-      const br = brands.find(b => b.id === cb.brandId);
+      const sup = suppliers.find(s => s.id === cb.sup_id);
+      const br = brands.find(b => b.id === cb.brand_id);
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${sup?.name || 'N/A'}</td>
@@ -177,8 +177,8 @@ async function addBrand(e) {
 async function addCombo(e) {
   e.preventDefault();
   const data = {
-    supId: parseInt(document.getElementById("comboSupplier").value),
-    brandId: parseInt(document.getElementById("comboBrand").value)
+    sup_id: parseInt(document.getElementById("comboSupplier").value),
+    brand_id: parseInt(document.getElementById("comboBrand").value)
   };
   await axios.post(comboApi, data);
   loadCombinations();
