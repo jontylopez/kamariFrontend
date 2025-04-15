@@ -196,7 +196,7 @@ import { resetPOSState } from './pos_pay.js';
     document.getElementById("receiptDate").textContent = dateStr;
     document.getElementById("receiptTime").textContent = timeStr;
     document.getElementById("receiptPaymentMethod").textContent = paymentMethod.toUpperCase();
-    document.getElementById("receiptTotal").textContent = total.toFixed(2);
+    document.getElementById("receiptTotalAmount").textContent = total.toFixed(2);
   
     // Bill discount
     if (billDiscount > 0) {
