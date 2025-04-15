@@ -8,7 +8,6 @@ const brandApi = "http://localhost:3000/api/brands";
 let allSupBrands = [];
 let allProducts = [];
 let allInventory = [];
-let allStockMovements = [];
 let allSuppliers = [];
 let allBrands = [];
 
@@ -20,20 +19,19 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await loadProducts();
   await loadInventory();
-  await loadStockMovements();
 
-  document
-    .getElementById("inventoryForm")
-    .addEventListener("submit", handleSubmit);
+  document.getElementById("inventoryForm").addEventListener("submit", handleSubmit);
+  setupInventorySearch();
 
-  document
-    .getElementById("inventorySearch")
-    .addEventListener("input", filterInventory);
+  document.querySelector(".close").addEventListener("click", () => {
+    document.getElementById("barcodeDownloadModal").style.display = "none";
+  });
 
   document.querySelector(".close").addEventListener("click", () => {
     document.getElementById("barcodeDownloadModal").style.display = "none";
   });
 });
+
 async function loadSupBrands() {
   const res = await axios.get(supBrandApi);
   allSupBrands = res.data;
@@ -82,31 +80,30 @@ async function loadBrands() {
   const res = await axios.get(brandApi);
   allBrands = res.data;
 }
-// Load stock movements to use for latest price
-async function loadStockMovements() {
-  const res = await axios.get(stockApi);
-  allStockMovements = res.data;
-  renderInventoryTable(allInventory);
+
+// Load inventory into table now Function from backend only show the lates 20
+async function loadInventory() {
+  try {
+    const res = await axios.get(`${inventoryApi}/latest`);
+    allInventory = res.data;
+    renderInventoryTable(allInventory);
+  } catch (err) {
+    console.error("Failed to load inventory:", err);
+  }
 }
 
-// Load inventory into table
-async function loadInventory() {
-  const res = await axios.get(inventoryApi);
-  allInventory = res.data;
-  renderInventoryTable(res.data);
-}
 
 function renderInventoryTable(data) {
   const tbody = document.getElementById("inventoryTableBody");
   tbody.innerHTML = "";
 
   data.forEach((inv) => {
-    const product = allProducts.find((p) => p.id === inv.product_id);
-    const supBr = allSupBrands.find((sb) => sb.id === inv.sup_br_id);
-    const supplier = allSuppliers.find((s) => s.id === supBr?.sup_id);
-    const brand = allBrands.find((b) => b.id === supBr?.brand_id);
-    const sellPrice = getLatestSellPrice(inv.id);
-    const quantity = getTotalStockQuantity(inv.id);
+    const product = inv.Product;
+    const supBr = inv.SupBrand;
+    const supplier = supBr?.Supplier;
+    const brand = supBr?.Brand;
+    const sellPrice = inv.latestSellPrice || "-";
+    const quantity = inv.totalQuantity || 0;
 
     const tr = document.createElement("tr");
     tr.innerHTML = `
@@ -117,15 +114,10 @@ function renderInventoryTable(data) {
       <td>${inv.size}</td>
       <td>${inv.color}</td>
       <td>${inv.description || "-"}</td>
-<td>
-          ${inv.b_code_id}
-<button onclick="openDownloadModal(&quot;${inv.b_code_id}&quot;, &quot;${inv.name
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;")}&quot;, &quot;${sellPrice}&quot;, &quot;${inv.size
-      }&quot;)">Print</button>
-
-
-        </td>
+      <td>
+        ${inv.b_code_id}
+        <button onclick="openDownloadModal(&quot;${inv.b_code_id}&quot;, &quot;${inv.name.replace(/"/g, "&quot;").replace(/'/g, "&#39;")}&quot;, &quot;${sellPrice}&quot;, &quot;${inv.size}&quot;)">Print</button>
+      </td>
       <td>${quantity}</td>
       <td>${sellPrice}</td>
       <td>
@@ -137,49 +129,76 @@ function renderInventoryTable(data) {
     tbody.appendChild(tr);
   });
 }
+function setupInventorySearch() {
+  const searchInput = document.getElementById("inventorySearch");
+  let searchTimeout;
 
-function filterInventory() {
-  const query = document.getElementById("inventorySearch").value.toLowerCase();
+  searchInput.addEventListener("input", () => {
+    clearTimeout(searchTimeout); // 🔁 Reset on every keystroke
 
-  const filtered = allInventory.filter((inv) => {
-    const product = allProducts.find((p) => p.id === inv.product_id);
-    const supBr = allSupBrands.find((sb) => sb.id === inv.sup_br_id);
-    const supplier = allSuppliers.find((s) => s.id === supBr?.sup_id);
-    const brand = allBrands.find((b) => b.id === supBr?.brand_id);
-    const sellPrice = getLatestSellPrice(inv.id);
-    const quantity = getTotalStockQuantity(inv.id);
+    searchTimeout = setTimeout(async () => {
+      const query = searchInput.value.trim();
 
-    return [
-      inv.name,
-      inv.b_code_id,
-      inv.color,
-      inv.size,
-      inv.description,
-      product?.name,
-      supplier?.name,
-      brand?.name,
-      sellPrice,
-      quantity,
-    ]
-      .filter(Boolean)
-      .some((val) => val.toString().toLowerCase().includes(query));
+      if (query) {
+        try {
+          const res = await axios.get(`${inventoryApi}/search?query=${encodeURIComponent(query)}`);
+          allInventory = res.data;
+          renderInventoryTable(allInventory);
+        } catch (err) {
+          console.error("Live search failed:", err);
+        }
+      } else {
+        // If search box is cleared, load default inventory
+        loadInventory();
+      }
+    }, 300); // 🕒 300ms debounce
   });
-
-  renderInventoryTable(filtered);
 }
 
-function getLatestSellPrice(inventory_id) {
-  const entries = allStockMovements
-    .filter((entry) => entry.inventory_id === inventory_id)
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  return entries.length ? entries[0].sell_price : "-";
+async function searchInventoryIfQueryExists() {
+  const query = document.getElementById("inventorySearch").value.trim();
+  if (query) {
+    try {
+      const res = await axios.get(`${inventoryApi}/search?query=${encodeURIComponent(query)}`);
+      allInventory = res.data;
+      renderInventoryTable(allInventory);
+    } catch (err) {
+      console.error("Search failed:", err);
+    }
+  } else {
+    await loadInventory();
+  }
 }
-function getTotalStockQuantity(inventory_id) {
-  const relevant = allStockMovements.filter(
-    (entry) => entry.inventory_id === inventory_id
-  );
-  return relevant.reduce((sum, s) => sum + s.quantity, 0);
+
+
+// function setupInventorySearch() {
+//   const searchInput = document.getElementById("inventorySearch");
+//   searchInput.addEventListener("keydown", async (e) => {
+//     if (e.key === "Enter") {
+//       const query = searchInput.value.trim();
+//       if (!query) return loadInventory(); // If empty, load default
+
+//       try {
+//         const res = await axios.get(`${inventoryApi}/search?query=${encodeURIComponent(query)}`);
+//         allInventory = res.data;
+//         renderInventoryTable(allInventory);
+//       } catch (err) {
+//         console.error("Search failed:", err);
+//       }
+//     }
+//   });
+// }
+
+async function getLatestSellPrice(inventory_id) {
+  const res = await axios.get(`${stockApi}/by-inventory/${inventory_id}`);
+  const sorted = res.data.sort((a, b) => new Date(b.date) - new Date(a.date));
+  return sorted.length ? sorted[0].sell_price : "-";
+}
+
+
+async function getTotalStockQuantity(inventory_id) {
+  const res = await axios.get(`${stockApi}/by-inventory/${inventory_id}`);
+  return res.data.reduce((sum, s) => sum + s.quantity, 0);
 }
 
 function showPriceSelectionModal(list, callback) {
@@ -232,15 +251,12 @@ function showBarcodeLabel(barcode, inventoryName, price, size) {
 
   updateLabelSize();
 }
-
+// Modified now happening in backend
 async function handleSubmit(e) {
   e.preventDefault();
 
   const name = document.getElementById("inventoryName").value.trim();
   const product_id = parseInt(document.getElementById("inventoryProduct").value);
-  const product = allProducts.find((p) => p.id === product_id);
-  const { gender, type } = product;
-
   const sup_br_id = parseInt(document.getElementById("inventoryCombo").value);
   const size = document.getElementById("inventorySize").value.trim();
   const color = document.getElementById("inventoryColor").value.trim();
@@ -249,51 +265,25 @@ async function handleSubmit(e) {
   const buy_price = parseFloat(document.getElementById("inventoryBuyPrice").value);
   const sell_price = parseFloat(document.getElementById("inventorySellPrice").value);
   const message = document.getElementById("formMessage");
-
-  // ✅ Duplicate Check
-  const isDuplicate = allInventory.some((inv) =>
-    inv.name === name &&
-    inv.product_id === product_id &&
-    inv.sup_br_id === sup_br_id &&
-    inv.size === size &&
-    inv.color.toLowerCase() === color.toLowerCase() &&
-    (inv.description || "").toLowerCase() === description.toLowerCase()
-  );
-
-  if (isDuplicate) {
-    message.textContent = "❌ This inventory item already exists.";
-    return;
-  }
+  console.log('Sending to backend:', {
+    name, product_id, sup_br_id, size, color, description
+  });
+  
   try {
-    const genderCode =
-      gender === "female" ? "W" : gender === "male" ? "M" : "U";
-    const typeMap = {
-      UpperBody: "UP",
-      LowerBody: "LO",
-      FullBody: "FU",
-      UnderGarment: "UN",
-      Article: "AR",
-    };
-    const prefix = `${genderCode}${typeMap[type]}`;
-
-    const invRes = await axios.get(inventoryApi);
-    const count = invRes.data.filter((i) =>
-      i.b_code_id.startsWith(prefix)
-    ).length;
-    const padded = String(count + 1).padStart(5, "0");
-    const b_code_id = `${prefix}${padded}`;
-
-    const invResPost = await axios.post(inventoryApi, {
+    // 🔥 NEW barcode-generating API call
+    const invRes = await axios.post(`${inventoryApi}/with-barcode`, {
       name,
       product_id,
       sup_br_id,
       size,
       color,
-      description,
-      b_code_id,
+      description
     });
-    const inventory_id = invResPost.data.id;
 
+    const inventory_id = invRes.data.id;
+    const b_code_id = invRes.data.b_code_id;
+
+    // 🔁 Check if stock entry exists
     const existingStockRes = await axios.get(stockApi);
     const matching = existingStockRes.data.find(
       (sm) =>
@@ -317,19 +307,19 @@ async function handleSubmit(e) {
 
     message.textContent = `✅ Inventory added with Barcode: ${b_code_id}`;
     loadInventory();
-    loadStockMovements();
   } catch (err) {
     console.error(err);
-    message.textContent = `❌ Error: ${err.response?.data?.error || err.message
-      }`;
+    message.textContent =
+      `❌ ${err.response?.data?.error || 'Something went wrong. Please try again.'}`;
   }
 }
 
-function openRestockModal(invId) {
+
+async function openRestockModal(invId) {
   const inv = allInventory.find(i => i.id === invId);
   if (!inv) return alert("Inventory item not found.");
 
-  const relevantStocks = allStockMovements.filter(s => s.inventory_id === invId);
+  const { data: relevantStocks } = await axios.get(`${stockApi}/by-inventory/${invId}`);
 
   const loadRestockForm = (stock) => {
     const existing = document.getElementById("restockModal");
@@ -395,24 +385,35 @@ async function submitRestock(invId) {
   const quantity = parseInt(document.getElementById("restockQty").value);
 
   try {
-    const existing = allStockMovements.find(
+    // 🔁 Load stock movements for this inventory only
+    const { data: relevantStocks } = await axios.get(`${stockApi}/by-inventory/${invId}`);
+
+    // 🔍 Find matching price entry
+    const existing = relevantStocks.find(
       (s) =>
-        s.inventory_id === invId &&
         parseFloat(s.buy_price) === buy_price &&
         parseFloat(s.sell_price) === sell_price
     );
 
     if (existing) {
+      // Update quantity
       await axios.put(`${stockApi}/${existing.id}`, {
         quantity: existing.quantity + quantity
       });
     } else {
-      await axios.post(stockApi, { inventory_id: invId, buy_price, sell_price, quantity });
+      // Create new stock movement
+      await axios.post(stockApi, {
+        inventory_id: invId,
+        quantity,
+        buy_price,
+        sell_price
+      });
     }
 
-    closeRestockModal(); 
-    await loadStockMovements();
-    await loadInventory();
+    closeRestockModal();
+    await searchInventoryIfQueryExists();
+
+   // await loadInventory();
     alert("✅ Restock successful");
   } catch (err) {
     console.error("Restock error:", err);
@@ -421,9 +422,9 @@ async function submitRestock(invId) {
 }
 
 
-function loadInventoryForEdit(id) {
+async function loadInventoryForEdit(id) {
   const inv = allInventory.find((i) => i.id === id);
-  const relevantStocks = allStockMovements.filter((s) => s.inventory_id === id);
+  const { data: relevantStocks } = await axios.get(`${stockApi}/by-inventory/${id}`);
 
   // Fill inventory fields
   document.getElementById("inventoryName").value = inv.name;
@@ -458,11 +459,9 @@ function loadInventoryForEdit(id) {
       buyField.disabled = false;
       sellField.disabled = false;
 
-      // Attach to update
       prepareUpdateButton(inv.id, chosenStock.id);
     });
   }
-
   // Hide original button
   document.querySelector("button[type='submit']").style.display = "none";
 }
@@ -493,37 +492,44 @@ async function updateInventoryWithStock(inventory_id, stock_movement_id) {
     const buy_price = parseFloat(document.getElementById("inventoryBuyPrice").value);
     const sell_price = parseFloat(document.getElementById("inventorySellPrice").value);
 
-    // Update inventory
+    // ✅ Update inventory data
     await axios.put(`${inventoryApi}/${inventory_id}`, {
       name, product_id, sup_br_id, size, color, description
     });
 
-    // Update selected stock_movement
+    // ✅ Update related stock
     await axios.put(`${stockApi}/${stock_movement_id}`, {
       quantity, buy_price, sell_price
     });
 
-    alert("Inventory and price updated.");
+    // ✅ Clear form, reset buttons, reload
     document.getElementById("inventoryForm").reset();
     document.querySelector("button[type='submit']").style.display = "inline-block";
-    document.getElementById("updateInventoryBtn").remove();
+    const updateBtn = document.getElementById("updateInventoryBtn");
+    if (updateBtn) updateBtn.remove();
 
-    loadInventory();
-    loadStockMovements();
+    //await loadInventory();
+    await searchInventoryIfQueryExists();
+
+
+    alert("✅ Inventory updated successfully.");
   } catch (err) {
     console.error("Update error:", err);
-    alert("Failed to update.");
+    alert("❌ Failed to update.");
   }
 }
 
+
 async function deleteInventory(id) {
-  const stocks = allStockMovements.filter((s) => s.inventory_id === id);
+  const { data: stocks } = await axios.get(`${stockApi}/by-inventory/${id}`);
 
   // No stock
   if (stocks.length === 0) {
     if (!confirm("Delete inventory item without stock?")) return;
     await axios.delete(`${inventoryApi}/${id}`);
-    await loadInventory();
+    await searchInventoryIfQueryExists();
+
+    // await loadInventory();
     alert("Inventory deleted successfully.");
     return;
   }
@@ -538,8 +544,8 @@ async function deleteInventory(id) {
       if (stock_movement_id) await axios.delete(`${stockApi}/${stock_movement_id}`);
       await axios.delete(`${inventoryApi}/${id}`);
 
-      await loadStockMovements();
-      await loadInventory();
+     await searchInventoryIfQueryExists();
+     // await loadInventory();
       alert("Inventory and stock deleted.");
     } catch (err) {
       console.error("Delete error:", err);
@@ -558,8 +564,8 @@ async function deleteInventory(id) {
     try {
       if (selectedStock?.id) {
         await axios.delete(`${stockApi}/${selectedStock.id}`);
-        await loadStockMovements();
-        await loadInventory();
+        await searchInventoryIfQueryExists();
+//        await loadInventory();
         alert("Stock entry deleted.");
       } else {
         console.warn("Invalid stock ID selected.");
@@ -572,11 +578,13 @@ async function deleteInventory(id) {
 }
 
 
-function openDownloadModal(barcode, inventoryName, defaultPrice, size) {
+async function openDownloadModal(barcode, inventoryName, defaultPrice, size) {
   const inventory = allInventory.find((inv) => inv.b_code_id === barcode);
-  const matchingPrices = allStockMovements
-    .filter((s) => s.inventory_id === inventory.id && s.quantity > 0)
-    .map((s) => s.sell_price);
+
+  const { data: stockList } = await axios.get(`${stockApi}/by-inventory/${inventory.id}`);
+const matchingPrices = stockList
+  .filter((s) => s.quantity > 0)
+  .map((s) => s.sell_price);
 
   const uniquePrices = [...new Set(matchingPrices.map((p) => parseFloat(p)))];
 
@@ -606,10 +614,6 @@ function fetchBarcodeImage(barcode) {
   document.getElementById(
     "barcodePreviewImg"
   ).src = `http://localhost:3000/api/barcode/${barcode}`;
-}
-
-function closeDownloadModal() {
-  document.getElementById("barcodeDownloadModal").style.display = "none";
 }
 
 function closeDownloadModal() {

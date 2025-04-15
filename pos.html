@@ -16,13 +16,15 @@
 
     <main class="pos-layout">
       <aside class="left-panel">
-        <div class="cart-header">
-          <h3>Order #<span id="orderNumber">001</span></h3>
-          <button id="clearCartBtn">Clear All</button>
+        <div class="cart-scrollable">
+          <div class="cart-header">
+            <h3>Order #<span id="orderNumber">001</span></h3>
+            <button id="clearCartBtn">Clear All</button>
+          </div>
+      
+          <div id="cartList" class="scanned-items"></div>
         </div>
-
-        <div id="cartList" class="scanned-items"></div>
-
+      
         <div class="cart-footer">
           <div class="bill-discount-area">
             <label for="billDiscount">Total Discount (%):</label>
@@ -34,14 +36,17 @@
               value="0"
               onchange="renderCart()"
             />
+          </div>  
+          <div class="cart-items-count">
+            Items: <span id="cartItemCount">0</span>
           </div>
-
           <div class="cart-total">
             Total: Rs <span id="totalAmount">0.00</span>
           </div>
           <button id="checkoutBtn">Proceed to Payment</button>
         </div>
       </aside>
+      
 
       <section class="right-panel">
         <div class="session-status">
@@ -74,6 +79,36 @@
         <div id="productGrid" class="product-grid"></div>
       </section>
     </main>
+<!-- Exchange Return Modal -->
+<div id="exchangeModal" class="modal" style="display: none">
+  <div class="modal-content">
+    <h2>🔁 Process Exchange</h2>
+
+    <label for="exchangeBarcodeInput">Scan Barcode:</label>
+    <input type="text" id="exchangeBarcodeInput" placeholder="Scan barcode..." />
+
+    <div id="exchangeReturnList" style="margin-top: 10px; max-height: 250px; overflow-y: auto;"></div>
+
+    <p style="margin-top: 10px;">
+      <strong>Total Return Value:</strong> Rs <span id="exchangeReturnTotal">0.00</span>
+    </p>
+
+    <label style="display: flex; align-items: left;  gap: 5px;">
+      <input type="checkbox" id="restockCheckbox" checked />
+      Restock Items
+    </label>
+
+    <div class="modal-actions">
+      <button id="confirmExchangeBtn">✅ Exchange</button>
+      <button onclick="closeModal('exchangeModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ✅ Return Receipt Modal -->
+<div id="returnReceiptModal" class="modal" style="display: none;">
+  <!-- JS will inject the receipt content here -->
+</div>
 
     <!-- Price Selection Modal -->
     <div id="priceSelectModal" class="modal" style="display: none">
@@ -85,7 +120,7 @@
       </div>
     </div>
 
-    <!-- Customer Prompt Modal -->
+    <!-- Customer Registration Prompt Modal -->
     <div id="customerModal" class="modal" style="display: none">
       <div class="modal-content">
         <h2>Customer Info</h2>
@@ -103,24 +138,64 @@
 
         <button id="searchCustomerBtn">Search</button>
         <button id="skipCustomerBtn">Skip</button>
+        <button onclick="closeModal('customerModal')">Cancel</button>
       </div>
     </div>
 
-    <!-- Payment Method Modal -->
     <div id="paymentModal" class="modal" style="display: none">
       <div class="modal-content">
-        <h2>Select Payment Method</h2>
-        <button onclick="handlePaymentMethod('cash')">💵 Cash</button>
-        <button onclick="handlePaymentMethod('card')">💳 Card</button>
-        <button onclick="handlePaymentMethod('bank')">🏦 Bank Transfer</button>
-        <button onclick="handlePaymentMethod('ex')">🔁 Exchange</button>
-        <button onclick="handlePaymentMethod('qr')">📱 QR</button>
-        <button onclick="handlePaymentMethod('voucher')">🎫 Voucher</button>
-        <button onclick="closeModal('paymentModal')">Cancel</button>
+        <h2>💳 Finalize Payment</h2>
+    
+        <!-- Top: Cart Total and Exchange -->
+        <div style="margin-bottom: 10px;">
+          <p><strong>Cart Total:</strong> Rs <span id="cartTotalLabel">0.00</span></p>
+          <p><strong>Balance to Collect:</strong> Rs <span id="multiBalanceDue">0.00</span></p>
+        </div>
+    
+        <!-- Payment Buttons -->
+        <div class="multi-pay-buttons">
+          <button type="button" onclick="togglePayField('cash')">💵 Cash</button>
+          <button type="button" onclick="togglePayField('card')">💳 Card</button>
+          <button type="button" onclick="togglePayField('voucher')">🎫 Voucher</button>
+        </div>
+    
+        <!-- Payment Fields -->
+        <div class="pay-field" data-method="cash" style="display: none">
+          <label>Amount: <input type="number" class="pay-amount" data-method="cash" /></label>
+          <label>Cash In: <input type="number" id="cashInValue" /></label>
+          <div>Balance: Rs <span id="cashBalancePreview">0.00</span></div>
+        </div>
+    
+        <div class="pay-field" data-method="card" style="display: none">
+          <label>Card Amount: <input type="number" class="pay-amount" data-method="card" /></label>
+        </div>
+    
+        <div class="pay-field" data-method="voucher" style="display: none">
+          <label>Voucher Amount: <input type="number" class="pay-amount" data-method="voucher" /></label>
+        </div>
+    <div>
+      <label for="multiExchangeId">Exchange ID (Optional):</label>
+          <input type="text" id="multiExchangeId" placeholder="Enter Exchange ID" />
+          <button id="exchangeValidation">Validate</button>
+          <div id="multiExchangeInfo" style="margin-top: 5px; color: green;"></div>
+    
+    </div>
+        <!-- Summary -->
+        <div style="margin-top: 10px;">
+          <strong>Total Due:</strong> Rs <span id="multiTotalDue">0.00</span><br>
+          <strong>Total Entered:</strong> Rs <span id="multiEnteredTotal">0.00</span>
+        </div>
+        <div id="payment-error-message" style="color: red; margin-top: 5px;"></div>
+        <!-- Buttons -->
+        <div class="modal-actions" style="margin-top: 10px;">
+          <button id="finalizePayBtn" disabled >✅ Finalize Payment</button>
+          <button onclick="closeModal('paymentModal')">Cancel</button>
+        </div>
       </div>
     </div>
+    
 
-    <!-- Cash Transaction Modal -->
+    <!-- Cash In and Out Transaction Modal -->
     <div id="cashTrModal" class="modal" style="display: none">
       <div class="modal-content">
         <h2 id="cashTrTitle">Cash Transaction</h2>
@@ -133,7 +208,7 @@
 
         <div class="modal-actions">
           <button id="submitCashTrBtn">Submit</button>
-          <button onclick="closeModal('cashTrModal')">Cancel</button>
+          <button onclick="window.closeModal('cashTrModal')">Cancel</button>
         </div>
       </div>
     </div>
@@ -160,162 +235,9 @@
       </div>
     </div>
 
-    <!-- Card Payment Modal -->
-    <div id="cardModal" class="modal" style="display: none">
-      <div class="modal-content">
-        <h2>Card Payment</h2>
-        <p><strong>Total:</strong> Rs <span id="cardDueTotal">0.00</span></p>
-        <!-- Inside cardModal -->
-        <p>Total: Rs <span id="cardDueTotal">0.00</span></p>
-        <button id="cardConfirmBtn">💳 Confirm Card Payment</button>
 
-        <div class="modal-actions">
-          <button id="cardSuccessBtn">✅ Payment Success</button>
-          <button onclick="closeModal('cardModal')">⬅ Back</button>
-        </div>
-      </div>
-    </div>
-    <!-- Exchange Cash Modal -->
-    <div id="exchangeCashModal" class="modal">
-      <div class="modal-content">
-        <h3>💰 Exchange Cash Payment</h3>
-        <p>Due Amount: Rs <span id="exchangeDueAmount">0.00</span></p>
-        <input type="number" id="exchangeCashIn" placeholder="Enter Cash In" />
-        <p>Balance: Rs <span id="exchangeCashBalance">0.00</span></p>
-        <button id="validateExchangeCashBtn">Validate</button>
-        <button id="confirmExchangeCashPaymentBtn" style="display: none">
-          Confirm & Print
-        </button>
-        <button onclick="closeModal('exchangeCashModal')">Cancel</button>
-      </div>
-    </div>
-
-    <!-- Exchange Payment Modal -->
-    <div id="exchangePayModal" class="modal" style="display: none">
-      <div class="modal-content">
-        <h2>Exchange Payment</h2>
-        <label for="exchangeIdInput">Enter Exchange ID:</label>
-        <input type="number" id="exchangeIdInput" placeholder="e.g. 123" />
-
-        <div id="exchangePaymentDetails" style="margin-top: 10px"></div>
-
-        <div class="modal-actions" id="exchangePaymentActions"></div>
-        <button onclick="closeModal('exchangePayModal')">Cancel</button>
-      </div>
-    </div>
-
-    <!-- QR Payment Modal -->
-    <div id="qrModal" class="modal" style="display: none">
-      <div class="modal-content">
-        <h2>QR Payment</h2>
-        <p>This feature is <strong>not available</strong> yet.</p>
-
-        <div class="modal-actions">
-          <button onclick="closeModal('qrModal')">⬅ Back</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Voucher Payment Modal -->
-    <div id="voucherModal" class="modal" style="display: none">
-      <div class="modal-content">
-        <h2>Voucher Payment</h2>
-        <p>This feature is <strong>not available</strong> yet.</p>
-
-        <div class="modal-actions">
-          <button onclick="closeModal('voucherModal')">⬅ Back</button>
-        </div>
-      </div>
-    </div>
-
-    <!--Exchange Modal-->
-    <div id="exchangeModal" class="modal" style="display: none">
-      <div class="modal-content">
-        <h2>Exchange Item</h2>
-
-        <label for="exchangeBarcode">Scan Barcode:</label>
-        <input type="text" id="exchangeBarcode" placeholder="Scan barcode..." />
-
-        <div id="exchangePriceOptions" style="margin: 10px 0"></div>
-
-        <label for="exchangeQuantity">Quantity:</label>
-        <input type="number" id="exchangeQuantity" value="1" min="1" />
-
-        <label>Restock this item?</label>
-        <select id="exchangeRestock">
-          <option value="true">Yes</option>
-          <option value="false">No</option>
-        </select>
-
-        <button id="submitExchangeBtn">Confirm Exchange</button>
-        <button onclick="closeModal('exchangeModal')">Cancel</button>
-      </div>
-    </div>
-
-    <!-- Exchange Card Modal -->
-    <div id="exchangeCardModal" class="modal" style="display: none">
-      <div class="modal-content">
-        <h3>💳 Confirm Card Payment</h3>
-        <p>
-          Please confirm the card payment of
-          <strong>Rs <span id="exchangeCardAmount">0.00</span></strong> was
-          successful.
-        </p>
-        <div class="modal-actions">
-          <button id="confirmExchangeCardBtn">✅ Confirm</button>
-          <button onclick="closeModal('exchangeCardModal')">❌ Cancel</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Return Receipt & Shop Copy Modal -->
-    <div id="returnReceiptModal" class="modal">
-      <div class="receipt-container">
-        <!-- Customer Copy -->
-        <div class="receipt-copy">
-          <h2>Return Receipt</h2>
-          <p><strong>Return ID:</strong> <span id="returnId"></span></p>
-          <p><strong>Item:</strong> <span id="returnItemName"></span></p>
-          <p><strong>Quantity:</strong> <span id="returnQty"></span></p>
-          <p><strong>Price:</strong> Rs. <span id="returnPrice"></span></p>
-          <p><strong>Total:</strong> Rs. <span id="returnTotal"></span></p>
-          <p><strong>Date:</strong> <span id="returnDate"></span></p>
-          <p><strong>Time:</strong> <span id="returnTime"></span></p>
-          <p>
-            <strong>Processed By:</strong> <span id="returnProcessedBy"></span>
-          </p>
-          <p style="text-align: center">Thank you!</p>
-        </div>
-
-        <hr class="divider" />
-
-        <!-- Shop Copy -->
-        <div class="receipt-copy">
-          <h2>Shop Copy</h2>
-          <p><strong>Return ID:</strong> <span id="shopReturnId"></span></p>
-          <p><strong>Item:</strong> <span id="shopReturnItem"></span></p>
-          <p><strong>Quantity:</strong> <span id="shopReturnQty"></span></p>
-          <p><strong>Price:</strong> Rs. <span id="shopReturnPrice"></span></p>
-          <p><strong>Total:</strong> Rs. <span id="shopReturnTotal"></span></p>
-          <p>
-            <strong>Restocked:</strong> <span id="shopReturnRestocked"></span>
-          </p>
-          <p><strong>Date:</strong> <span id="shopReturnDate"></span></p>
-          <p><strong>Time:</strong> <span id="shopReturnTime"></span></p>
-          <p>
-            <strong>Processed By:</strong>
-            <span id="shopReturnProcessedBy"></span>
-          </p>
-          <p style="text-align: center">Internal Record</p>
-        </div>
-
-        <div class="receipt-actions">
-          <button onclick="printReceipt('returnReceiptModal')">🖨️ Print</button>
-          <button onclick="closeModal('returnReceiptModal')">❌ Close</button>
-        </div>
-      </div>
-    </div>
-
+  
+      <!-- Main Recipt here -->
     <div id="receiptModal" class="modal" style="display: none">
       <div id="receiptCombinedWrapper">
         <!-- Print and Close buttons -->
@@ -323,7 +245,7 @@
           <button onclick="printReceipt('receiptModal')" class="print-btn">
             🖨️ Print Receipt
           </button>
-          <button onclick="closeModal('receiptModal')">Close</button>
+          <button onclick="closeReceiptAndReset()">Close</button>
         </div>
         <!-- Customer Receipt -->
         <div class="receipt-wrapper" id="receiptContent">
@@ -370,7 +292,13 @@
               <span id="receiptBillDiscount"></span>%
             </p>
             <p><strong>Total:</strong> Rs <span id="receiptTotal"></span></p>
+            <div class="cart-total">
+              Total: Rs <span id="totalAmount">0.00</span>
+              <div id="exchangeDeductionNote"></div>
+            </div>
+            
           </div>
+          <div id="receiptExchangeInfo" style="margin-bottom: 10px;"></div>
 
           <!-- FOOTER -->
           <div class="receipt-footer">
@@ -415,7 +343,9 @@
         </div>
       </div>
     </div>
-
-    <script src="js/pos.js"></script>
+    <script type="module" src="js/pos_modals.js"></script>
+    <script type="module" src="js/pos_customer.js"></script>
+    <script type="module" src="js/pos_multi_payment.js"></script>    
+    <script type="module" src="js/pos.js"></script>
   </body>
 </html>
