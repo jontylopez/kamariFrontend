@@ -21,10 +21,10 @@
             <h3>Order #<span id="orderNumber">001</span></h3>
             <button id="clearCartBtn">Clear All</button>
           </div>
-      
+
           <div id="cartList" class="scanned-items"></div>
         </div>
-      
+
         <div class="cart-footer">
           <div class="bill-discount-area">
             <label for="billDiscount">Total Discount (%):</label>
@@ -36,7 +36,7 @@
               value="0"
               onchange="renderCart()"
             />
-          </div>  
+          </div>
           <div class="cart-items-count">
             Items: <span id="cartItemCount">0</span>
           </div>
@@ -46,7 +46,6 @@
           <button id="checkoutBtn">Proceed to Payment</button>
         </div>
       </aside>
-      
 
       <section class="right-panel">
         <div class="session-status">
@@ -79,36 +78,44 @@
         <div id="productGrid" class="product-grid"></div>
       </section>
     </main>
-<!-- Exchange Return Modal -->
-<div id="exchangeModal" class="modal" style="display: none">
-  <div class="modal-content">
-    <h2>🔁 Process Exchange</h2>
+    <!-- Exchange Return Modal -->
+    <div id="exchangeModal" class="modal" style="display: none">
+      <div class="modal-content">
+        <h2>🔁 Process Exchange</h2>
 
-    <label for="exchangeBarcodeInput">Scan Barcode:</label>
-    <input type="text" id="exchangeBarcodeInput" placeholder="Scan barcode..." />
+        <label for="exchangeBarcodeInput">Scan Barcode:</label>
+        <input
+          type="text"
+          id="exchangeBarcodeInput"
+          placeholder="Scan barcode..."
+        />
 
-    <div id="exchangeReturnList" style="margin-top: 10px; max-height: 250px; overflow-y: auto;"></div>
+        <div
+          id="exchangeReturnList"
+          style="margin-top: 10px; max-height: 250px; overflow-y: auto"
+        ></div>
 
-    <p style="margin-top: 10px;">
-      <strong>Total Return Value:</strong> Rs <span id="exchangeReturnTotal">0.00</span>
-    </p>
+        <p style="margin-top: 10px">
+          <strong>Total Return Value:</strong> Rs
+          <span id="exchangeReturnTotal">0.00</span>
+        </p>
 
-    <label style="display: flex; align-items: left;  gap: 5px;">
-      <input type="checkbox" id="restockCheckbox" checked />
-      Restock Items
-    </label>
+        <label style="display: flex; align-items: left; gap: 5px">
+          <input type="checkbox" id="restockCheckbox" checked />
+          Restock Items
+        </label>
 
-    <div class="modal-actions">
-      <button id="confirmExchangeBtn">✅ Exchange</button>
-      <button onclick="closeModal('exchangeModal')">Cancel</button>
+        <div class="modal-actions">
+          <button id="confirmExchangeBtn">✅ Exchange</button>
+          <button onclick="closeModal('exchangeModal')">Cancel</button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<!-- ✅ Return Receipt Modal -->
-<div id="returnReceiptModal" class="modal" style="display: none;">
-  <!-- JS will inject the receipt content here -->
-</div>
+    <!-- ✅ Return Receipt Modal -->
+    <div id="returnReceiptModal" class="modal" style="display: none">
+      <!-- JS will inject the receipt content here -->
+    </div>
 
     <!-- Price Selection Modal -->
     <div id="priceSelectModal" class="modal" style="display: none">
@@ -145,55 +152,86 @@
     <div id="paymentModal" class="modal" style="display: none">
       <div class="modal-content">
         <h2>💳 Finalize Payment</h2>
-    
+
         <!-- Top: Cart Total and Exchange -->
-        <div style="margin-bottom: 10px;">
-          <p><strong>Cart Total:</strong> Rs <span id="cartTotalLabel">0.00</span></p>
-          <p><strong>Balance to Collect:</strong> Rs <span id="multiBalanceDue">0.00</span></p>
+        <div style="margin-bottom: 10px">
+          <p>
+            <strong>Cart Total:</strong> Rs
+            <span id="cartTotalLabel">0.00</span>
+          </p>
+          <p>
+            <strong>Balance to Collect:</strong> Rs
+            <span id="multiBalanceDue">0.00</span>
+          </p>
         </div>
-    
+
         <!-- Payment Buttons -->
         <div class="multi-pay-buttons">
-          <button type="button" onclick="togglePayField('cash')">💵 Cash</button>
-          <button type="button" onclick="togglePayField('card')">💳 Card</button>
-          <button type="button" onclick="togglePayField('voucher')">🎫 Voucher</button>
+          <button type="button" onclick="togglePayField('cash')">
+            💵 Cash
+          </button>
+          <button type="button" onclick="togglePayField('card')">
+            💳 Card
+          </button>
+          <button type="button" onclick="togglePayField('voucher')">
+            🎫 Voucher
+          </button>
         </div>
-    
+
         <!-- Payment Fields -->
         <div class="pay-field" data-method="cash" style="display: none">
-          <label>Amount: <input type="number" class="pay-amount" data-method="cash" /></label>
+          <label
+            >Cash Amount:
+            <input type="number" class="pay-amount" data-method="cash"
+          /></label>
           <label>Cash In: <input type="number" id="cashInValue" /></label>
           <div>Balance: Rs <span id="cashBalancePreview">0.00</span></div>
         </div>
-    
+
         <div class="pay-field" data-method="card" style="display: none">
-          <label>Card Amount: <input type="number" class="pay-amount" data-method="card" /></label>
+          <label
+            >Card Amount:
+            <input type="number" class="pay-amount" data-method="card"
+          /></label>
         </div>
-    
+
         <div class="pay-field" data-method="voucher" style="display: none">
-          <label>Voucher Amount: <input type="number" class="pay-amount" data-method="voucher" /></label>
+          <label
+            >Voucher Amount:
+            <input type="number" class="pay-amount" data-method="voucher"
+          /></label>
         </div>
-    <div>
-      <label for="multiExchangeId">Exchange ID (Optional):</label>
-          <input type="text" id="multiExchangeId" placeholder="Enter Exchange ID" />
+        <div>
+          <label for="multiExchangeId">Exchange ID (Optional):</label>
+          <input
+            type="text"
+            id="multiExchangeId"
+            placeholder="Enter Exchange ID"
+          />
           <button id="exchangeValidation">Validate</button>
-          <div id="multiExchangeInfo" style="margin-top: 5px; color: green;"></div>
-    
-    </div>
-        <!-- Summary -->
-        <div style="margin-top: 10px;">
-          <strong>Total Due:</strong> Rs <span id="multiTotalDue">0.00</span><br>
-          <strong>Total Entered:</strong> Rs <span id="multiEnteredTotal">0.00</span>
+          <div
+            id="multiExchangeInfo"
+            style="margin-top: 5px; color: green"
+          ></div>
         </div>
-        <div id="payment-error-message" style="color: red; margin-top: 5px;"></div>
+        <!-- Summary -->
+        <div style="margin-top: 10px">
+          <strong>Total Due:</strong> Rs <span id="multiTotalDue">0.00</span
+          ><br />
+          <strong>Total Entered:</strong> Rs
+          <span id="multiEnteredTotal">0.00</span>
+        </div>
+        <div
+          id="payment-error-message"
+          style="color: red; margin-top: 5px"
+        ></div>
         <!-- Buttons -->
-        <div class="modal-actions" style="margin-top: 10px;">
-          <button id="finalizePayBtn" disabled >✅ Finalize Payment</button>
-          <button onclick="closeModal('paymentModal')">Cancel</button>
+        <div class="modal-actions" style="margin-top: 10px">
+          <button id="finalizePayBtn" disabled>✅ Finalize Payment</button>
+          <button id="cancelPaymentBtn">Cancel</button>
         </div>
       </div>
     </div>
-    
 
     <!-- Cash In and Out Transaction Modal -->
     <div id="cashTrModal" class="modal" style="display: none">
@@ -235,9 +273,7 @@
       </div>
     </div>
 
-
-  
-      <!-- Main Recipt here -->
+    <!-- Main Receipt here -->
     <div id="receiptModal" class="modal" style="display: none">
       <div id="receiptCombinedWrapper">
         <!-- Print and Close buttons -->
@@ -283,30 +319,40 @@
           </div>
 
           <div class="totals">
+            <div class="bill-summary">
+              <p>
+                <strong>Net Amount:</strong>
+                <span id="receiptNetAmount">0.00</span>
+              </p>
+
+              <p>
+                <strong>Discount Amount:</strong>
+                <span id="receiptDiscountAmount">0.00</span>
+              </p>
+              <p>
+                <strong>Gross Amount:</strong>
+                <span id="receiptTotalAmount">0.00</span>
+              </p>
+            </div>
+            <div id="receiptExchangeInfo" style="margin-bottom: 10px"></div>
             <p>
               <strong>Payment Method:</strong>
               <span id="receiptPaymentMethod"></span>
             </p>
-            <p id="receiptBillDiscountWrap" style="display: none">
-              <strong>Bill Discount:</strong>
-              <span id="receiptBillDiscount"></span>%
-            </p>
-            <!-- <p><strong>Total:</strong> Rs <span id="receiptTotal"></span></p> -->
-            <div class="cart-total">
-              Total: Rs <span id="receiptTotalAmount">0.00</span>
-              <div id="exchangeDeductionNote"></div>
-            </div>
-            
           </div>
-          <div id="receiptExchangeInfo" style="margin-bottom: 10px;"></div>
 
           <!-- FOOTER -->
           <div class="receipt-footer">
-            <div class="receipt-address">
-              Kamari Clothing, 123 Luxury Street, Colombo 07
+            <div class="thank-you">THANK YOU FOR YOUR PURCHASE</div>
+            <div class="exchange-policy">
+              ONE TIME EXCHANGE POSSIBLE WITHIN 10 DAYS,<br />
+              WITH RECEIPT, IF PRODUCT IS IN ORIGINAL CONDITION.<br />
+              PURCHASES ARE NON REFUNDABLE.<br />
+              ITEMS PURCHASED ON DISCOUNT ARE NOT ELIGIBLE FOR EXCHANGE.
             </div>
-            <div class="receipt-contact">
-              Call: +94 77 123 4567 | Email: info@kamari.lk
+            <div class="contact-info">
+              No 558, Highlevel Road, Pannipitiya<br />
+              Tel: +94703360222 | Email: kamariluxury@gmail.com
             </div>
             <div class="receipt-social">
               <img src="images/icons/fb.png" alt="Facebook" />
@@ -314,7 +360,6 @@
               <img src="images/icons/x.png" alt="X" />
               <img src="images/icons/tiktok.png" alt="TikTok" />
             </div>
-            <div class="qr-area">[QR CODE HERE]</div>
           </div>
         </div>
 
@@ -326,7 +371,7 @@
           <h2>Kamari POS - Shop Copy</h2>
           <div class="copy-details">
             <p><strong>Order #:</strong> <span id="shopCopyOrderId"></span></p>
-            <p><strong>Date:</strong><span id="shopCopyDate"></span></p>
+            <p><strong>Date:</strong> <span id="shopCopyDate"></span></p>
             <p>
               <strong>Customer:</strong> <span id="shopCopyCustomer"></span>
             </p>
@@ -345,7 +390,7 @@
     </div>
     <script type="module" src="js/pos_modals.js"></script>
     <script type="module" src="js/pos_customer.js"></script>
-    <script type="module" src="js/pos_multi_payment.js"></script>    
+    <script type="module" src="js/pos_multi_payment.js"></script>
     <script type="module" src="js/pos.js"></script>
   </body>
 </html>

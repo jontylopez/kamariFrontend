@@ -39,16 +39,16 @@ header a:hover {
   flex-wrap: wrap;
 }
 
-/* Set the main container to take full height */
+/* Main Layout */
 .pos-layout {
   display: flex;
   gap: 20px;
   padding: 20px;
-  height: calc(100vh - 140px); /* Adjust 64px based on your header height */
+  height: calc(100vh - 140px);
   box-sizing: border-box;
 }
 
-/* Make left panel take full available height and use flex properly */
+/* Left Panel */
 .left-panel {
   width: 30%;
   display: flex;
@@ -57,34 +57,47 @@ header a:hover {
   border-radius: 10px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
   overflow: hidden;
-  height: 100%; /* Take full height of parent */
-  max-height: 100%; /* Ensure it doesn't overflow */
+  height: 100%;
 }
 
-/* Scrollable area takes all available space but allows shrinking */
 .cart-scrollable {
   flex: 1 1 auto;
   overflow-y: auto;
   padding: 20px;
   box-sizing: border-box;
-  min-height: 0; /* Critical for Firefox flex scrolling */
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
-/* Header and total items container */
 .cart-header {
-  flex-shrink: 0; /* Prevent shrinking */
+  flex-shrink: 0;
   margin-bottom: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-/* Items container grows and scrolls */
 .scanned-items {
   flex: 1 1 auto;
   overflow-y: auto;
   margin-bottom: 0;
   scroll-behavior: smooth;
 }
+
+.cart-item {
+  background: #ffffff;
+  border-left: 5px solid #607d8b;
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+}
+
 .cart-item.highlight-cart {
   background-color: #fff8c6;
   border: 2px solid #f9a825;
@@ -93,26 +106,11 @@ header a:hover {
   transition: all 0.3s ease;
 }
 
-/* Footer stays at bottom with no scrolling */
-.cart-footer {
-  flex-shrink: 0; /* Prevent shrinking */
-  background: #fff;
-  padding: 12px 20px;
-  border-top: 1px solid #ccc;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
-  position: sticky; /* As a backup approach */
-  bottom: 0;
-  z-index: 10;
-}
-.cart-items-count {
-  font-size: 14px;
-  color: #333;
-}
+/* Buttons */
 #startDayBtn,
-#closeDayBtn {
+#closeDayBtn,
+#clearCartBtn,
+#checkoutBtn {
   padding: 10px;
   border: none;
   border-radius: 6px;
@@ -131,39 +129,491 @@ header a:hover {
   color: white;
 }
 
-#sessionStatus {
-  font-weight: bold;
-  color: #455a64;
-}
-
 #clearCartBtn {
   background: #ef5350;
   color: #fff;
-  border: none;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 13px;
-}
-
-.cart-total {
-  font-size: 16px;
-  font-weight: bold;
 }
 
 #checkoutBtn {
   background: #607d8b;
   color: white;
   padding: 12px;
-  border: none;
-  border-radius: 6px;
   font-size: 15px;
-  cursor: pointer;
-  transition: all 0.3s ease;
 }
 
 #checkoutBtn:hover {
   background: #455a64;
+}
+
+/* Modal Styles */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: flex-start;
+  padding: 20px;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.modal-content {
+  background: white;
+  padding: 25px;
+  border-radius: 10px;
+  width: 400px;
+  max-width: 95%;
+  margin: 20px auto;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-content h2,
+.modal-content h3 {
+  margin: 0 0 15px 0;
+  color: #37474f;
+}
+
+.modal-content label {
+  display: block;
+  margin: 10px 0 5px;
+  font-weight: 500;
+}
+
+.modal-content input {
+  width: 100%;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.modal-content button {
+  background: #607d8b;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin: 5px;
+}
+
+.modal-content button:hover {
+  background: #455a64;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* Exchange Modal Specific */
+#exchangeReturnList {
+  max-height: 300px;
+  overflow-y: auto;
+  margin: 15px 0;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+/* Payment Modal Specific */
+.multi-pay-buttons {
+  display: flex;
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.pay-field {
+  margin: 15px 0;
+  padding: 15px;
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+/* === Receipt Modal Styles (Compact Version) === */
+#receiptModal {
+  padding: 0;
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  overflow-y: auto;
+}
+
+#receiptCombinedWrapper {
+  background: white;
+  width: 80mm;
+  margin: 10px auto;
+  font-family: 'Courier New', Courier, monospace;
+  box-shadow: none;
+}
+
+.receipt-wrapper {
+  padding: 10px;
+  box-sizing: border-box;
+}
+
+.receipt-header {
+  text-align: center;
+  padding: 4px 0;
+  margin: 0;
+  border-bottom: 1px dashed #999;
+  line-height: 1.2; /* Tight line spacing */
+}
+
+.receipt-header .logo {
+  max-width: 60mm;
+  height: auto;
+  margin: 0 auto 2px;
+  display: block;
+}
+
+.receipt-header .slogan {
+  font-family: 'Arial', sans-serif;
+  font-size: 10px;
+  margin: 2px 0;
+  letter-spacing: 1px;
+  line-height: 1.1;
+}
+
+.receipt-header p {
+  margin: 2px 0; /* Reduce top/bottom spacing */
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.receipt-body {
+  padding: 5px 0;
+}
+
+.receipt-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 6px 0;
+  font-size: 11px;
+}
+
+.receipt-table th,
+.receipt-table td {
+  padding: 2px 3px;
+  text-align: left;
+}
+
+.receipt-table th {
+  border-bottom: 1px solid #000;
+}
+
+.totals {
+  margin-top: 5px;
+  padding: 5px 0;
+  border-top: 1px dashed #999;
+}
+
+.bill-summary {
+  background: #f9f9f9;
+  padding: 6px;
+  border-radius: 4px;
+  margin: 6px 0;
+  font-size: 11px;
+}
+
+.bill-summary p {
+  margin: 3px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.bill-summary p strong {
+  flex: 1;
+  text-align: left;
+}
+
+.bill-summary p span {
+  flex: 0 0 auto;
+  text-align: right;
+  min-width: 60px;
+  padding-left: 5px;
+}
+
+/* Make Gross Amount stand out */
+.bill-summary p:last-of-type {
+  font-weight: bold;
+  margin-top: 8px;
+  padding-top: 5px;
+  border-top: 1px dashed #ccc;
+}
+
+.bill-summary p:last-of-type strong {
+  font-size: 16px;
+  color: #2e7d32;
+  font-weight: bold;
+}
+
+.bill-summary p:last-of-type span {
+  font-size: 14px;
+  color: #2e7d32;
+  min-width: 70px;
+  font-weight: bold;
+}
+
+/* Ensure consistent alignment for all amount displays */
+#receiptNetAmount,
+#receiptBillDiscount,
+#receiptDiscountAmount {
+  display: inline-block;
+  text-align: right;
+  min-width: 60px;
+  font-size: 11px;
+}
+
+#receiptTotalAmount {
+  display: inline-block;
+  text-align: right;
+  min-width: 70px;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+/* Add Rs symbol styling */
+.bill-summary p span::before {
+  content: "Rs ";
+  font-weight: normal;
+}
+
+.bill-summary p:last-of-type span::before {
+  content: "Rs ";
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.receipt-footer {
+  padding: 6px 0;
+  font-size: 9px;
+  text-align: center;
+  border-top: 1px dashed #999;
+  margin-top: 10px;
+}
+
+.receipt-footer .thank-you {
+  font-weight: bold;
+  margin: 6px 0;
+  font-size: 11px;
+}
+
+.receipt-footer .exchange-policy,
+.receipt-footer .contact-info {
+  margin: 4px 0;
+  line-height: 1.3;
+}
+
+.receipt-social {
+  margin: 5px 0;
+}
+
+.receipt-social img {
+  width: 14px;
+  height: 14px;
+  margin: 0 2px;
+}
+
+
+/* Shop Copy Styling */
+.shop-copy-content {
+  padding: 10px;
+  border-top: 2px dashed #000;
+  margin-top: 10px;
+  font-size: 12px;
+}
+
+.shop-copy-content h2 {
+  text-align: center;
+  font-size: 14px;
+  margin: 5px 0 10px;
+  padding-bottom: 5px;
+  border-bottom: 1px dashed #999;
+}
+
+.copy-details p {
+  margin: 6px 0;
+}
+
+/* Cash Info Styling */
+.cash-info {
+  background: #f0f8ff;
+  padding: 8px;
+  border-radius: 4px;
+  margin: 8px 0;
+}
+
+.cash-info p {
+  margin: 4px 0;
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+}
+
+/* Common print settings */
+@media print {
+  @page {
+    margin: 0;
+    size: 80mm 297mm; /* Standard thermal receipt size */
+  }
+
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 72.1mm !important; /* Actual printable width */
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  /* Regular receipt modal printing */
+  #receiptModal.modal-printing,
+  #receiptModal.modal-printing * {
+    visibility: visible !important;
+  }
+
+  #receiptModal.modal-printing {
+    position: absolute !important;
+    top: 0;
+    left: 0;
+    width: 72.1mm !important; /* Printable width */
+    background: white !important;
+    box-shadow: none !important;
+    display: block !important;
+    height: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  #receiptCombinedWrapper {
+    width: 72.1mm !important; /* Printable width */
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  /* Force customer receipt to be one unit */
+  .receipt-wrapper {
+    margin: 0 !important;
+    padding: 5px !important;
+    display: block;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+    break-after: avoid !important;
+    break-inside: avoid !important;
+    width: 72.1mm !important; /* Printable width */
+  }
+
+  /* Keep receipt components together */
+  .receipt-header, 
+  .receipt-body, 
+  .totals, 
+  .receipt-footer {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    display: block;
+    width: 72.1mm !important; /* Printable width */
+  }
+   
+  /* Make sure footer stays attached to content */
+  .receipt-footer {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+
+  /* Hide the dashed separator during printing */
+  div[style*="border-top: 2px dashed"] {
+    display: none !important;
+  }
+
+  /* Shop copy section - force to new page */
+  .shop-copy-content {
+    page-break-before: always !important;
+    break-before: page !important;
+    margin: 0 !important;
+    padding: 5px !important;
+    display: block;
+    width: 72.1mm !important; /* Printable width */
+  }
+
+  /* Hide buttons */
+  button,
+  .modal-actions,
+  .print-btn {
+    display: none !important;
+  }
+
+  /* Return receipt modal printing */
+  #returnReceiptModal.modal-printing,
+  #returnReceiptModal.modal-printing * {
+    visibility: visible !important;
+  }
+  
+  #returnReceiptModal.modal-printing {
+    position: absolute !important;
+    left: 0;
+    top: 0;
+    width: 72.1mm !important; /* Printable width */
+    background: white !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    display: block !important;
+    height: auto !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .receipt-container {
+    box-shadow: none;
+    margin: 0 auto;
+    width: 72.1mm !important; /* Printable width */
+  }
+
+  /* Customer Copy */
+  .receipt-copy:first-of-type {
+    break-after: page;
+    page-break-after: always;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    display: block;
+    width: 72.1mm !important; /* Printable width */
+  }
+
+  /* Shop Copy */
+  .receipt-copy:last-of-type {
+    break-before: page;
+    page-break-before: always;
+    break-inside: avoid;
+    page-break-inside: avoid;
+    display: block;
+    width: 72.1mm !important; /* Printable width */
+  }
+
+  /* Hide UI Elements for both modals */
+  button,
+  .modal-actions,
+  .print-btn,
+  .receipt-actions,
+  .divider {
+    display: none !important;
+  }
 }
 
 .right-panel {
@@ -227,103 +677,14 @@ header a:hover {
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
-.modal {
-  display: none;
-  position: fixed;
-  z-index: 9999;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  /* Center the modal content */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  /* Reset padding/margin that might affect centering */
-  padding: 0;
-  margin: 0;
+#sessionStatus {
+  font-weight: bold;
+  color: #455a64;
 }
 
-.modal-content {
-  background: white;
-  padding: 25px;
-  border-radius: 10px;
-  width: 400px;
-  max-width: 95%;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
-  /* Remove flex from content - let modal handle centering */
-  display: block;
-}
-
-.modal-content h2,
-.modal-content h3 {
-  margin: 0 0 10px 0;
-  color: #37474f;
-  font-weight: 600;
-}
-
-.modal-content button {
-  background: #607d8b;
-  color: white;
-  padding: 10px;
-  margin: 3px;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: 500;
-  font-size: 15px;
-}
-
-.modal-content input {
-  padding: 10px;
-  font-size: 15px;
-  margin: 5px;
-  border: 2px solid #cfd8dc;
-  border-radius: 6px;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-#priceOptions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  justify-content: center;
-}
-
-@media print {
-  body * {
-    visibility: hidden;
-  }
-  #receiptModal, #receiptModal * {
-    visibility: visible;
-  }
-  #receiptModal {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 100%;
-    background: white;
-  }
-  button {
-    display: none;
-  }
-}
-
-.cart-item {
-  background: #ffffff;
-  border-left: 5px solid #607d8b;
-  padding: 12px 16px;
-  margin-bottom: 10px;
-  border-radius: 6px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.cart-items-count {
   font-size: 14px;
+  color: #333;
 }
 
 .cart-details {
@@ -421,7 +782,6 @@ header a:hover {
   background-color: #222;
 }
 
-
 /* Cash Transaction Modal Styles */
 #cashTrModal .modal-content {
   max-width: 400px;
@@ -459,356 +819,76 @@ header a:hover {
   background-color: #111;
 }
 
-
-
-
-/* === Receipt Modal Styling === */
-#receiptModal {
-  display: none;
-  justify-content: center;
-  align-items: center;
-  position: fixed;
-  top: 0; left: 0; right: 0; bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
-  z-index: 9999;
-  overflow-y: auto;
-  padding: 20px 0;
-}
-
-#receiptCombinedWrapper {
-  background: white;
-  width: 7cm;
-  margin: auto;
+/* Return Receipt Modal Styles */
+#returnReceiptModal {
   padding: 0;
-  font-family: 'Courier New', Courier, monospace;
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
-  display: flex;
-  flex-direction: column;
-  justify-content: start;
-}
-
-.receipt-wrapper {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-/* Top Section */
-.receipt-header {
-  padding: 0.5cm 0.3cm 0.3cm;
-  text-align: center;
-  border-bottom: 1px dashed #999;
-}
-
-.receipt-header img {
-  max-width: 5cm;
-  margin-bottom: 0.2cm;
-}
-
-.slogan {
-  font-family: 'Fantasy', cursive;
-  letter-spacing: 5px;
-  font-size: 10px;
-  margin-bottom: 0.3cm;
-}
-
-/* Middle Dynamic Content */
-.receipt-body {
-  padding: 0.3cm;
-  flex: 1;
-}
-
-.receipt-body table {
-  width: 100%;
-  font-size: 12px;
-  border-collapse: collapse;
-}
-
-.receipt-body th,
-.receipt-body td {
-  padding: 2px 4px;
-  text-align: left;
-}
-
-.receipt-body th {
-  border-bottom: 1px solid #000;
-}
-
-.totals {
-  padding: 0 0.3cm;
-  margin-top: 0.3cm;
-  font-weight: bold;
-  text-align: right;
-  font-size: 13px;
-  border-top: 1px dashed #999;
-  padding-top: 0.2cm;
-}
-
-/* Bottom Section */
-.receipt-footer {
-  padding: 0.3cm;
-  font-size: 10px;
-  border-top: 1px dashed #999;
-  text-align: center;
-  margin-top: 0.3cm;
-}
-
-.receipt-social img {
-  width: 18px;
-  height: 18px;
-  margin: 0 4px;
-  object-fit: contain;
-  display: inline-block;
-}
-
-.qr-area {
-  margin-top: 0.2cm;
-  height: 2.5cm;
-  background: #f2f2f2;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 10px;
-  color: #666;
-  border: 1px dashed #ccc;
-}
-
-/* Shop Copy Styling */
-.shop-copy-content {
-  padding: 0.5cm 0.3cm;
-  font-family: 'Courier New', monospace;
-  text-align: left;
-}
-
-.shop-copy-content h2 {
-  margin-top: 0;
-  font-size: 14px;
-  text-align: center;
-  border-bottom: 1px dashed #aaa;
-  padding-bottom: 10px;
-  margin-bottom: 15px;
-}
-.modal {
-  position: fixed;
-  z-index: 9999; /* Ensure it's on top */
-}
-
-.copy-details p {
-  margin: 6px 0;
-  font-size: 12px;
-}
-
-
-
-.modal {
   display: none;
   position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
+  z-index: 9999;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  overflow-y: auto;
 }
 
 .receipt-container {
   background: white;
-  padding: 20px;
-  width: 7cm;
-  min-height: 15cm;
-  border-radius: 10px;
-  box-shadow: 0 0 10px #0003;
-  font-family: monospace;
+  width: 80mm;
+  margin: 20px auto;
+  font-family: 'Courier New', Courier, monospace;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  padding: 15px;
 }
 
 .receipt-copy {
-  margin-bottom: 30px;
+  background: white;
+  padding: 15px;
+  margin-bottom: 20px;
 }
 
 .receipt-copy h2 {
   text-align: center;
-  margin-bottom: 10px;
+  font-size: 16px;
+  margin: 0 0 15px 0;
+  padding-bottom: 10px;
+  border-bottom: 1px dashed #999;
+}
+
+.receipt-copy p {
+  margin: 8px 0;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.receipt-copy hr {
+  border: none;
+  border-top: 1px dashed #999;
+  margin: 10px 0;
+}
+
+.divider {
+  border: none;
+  border-top: 2px dashed #000;
+  margin: 20px 0;
 }
 
 .receipt-actions {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 20px;
+  text-align: center;
+  margin: 15px 0;
 }
 
 .receipt-actions button {
-  flex: 1;
-  padding: 10px;
+  padding: 8px 16px;
+  margin: 0 5px;
   border: none;
-  background: #333;
+  border-radius: 4px;
+  background: #607d8b;
   color: white;
-  border-radius: 5px;
   cursor: pointer;
 }
 
 .receipt-actions button:hover {
-  background: #000;
-}
-
-.divider {
-  border-top: 2px dashed #aaa;
-  margin: 20px 0;
-}
-.exchange-id-area {
-  margin-top: 10px;
-}
-
-.exchange-id-area input {
-  flex: 1;
-  padding: 4px;
-}
-
-/* === Receipt Modal Print Styling === */
-@media print {
-  /* Hide everything by default */
-  body * {
-    visibility: hidden !important;
-  }
-  
-  /* General Print Settings */
-  button, .receipt-actions {
-    display: none !important;
-  }
-  
-  /* Normal Receipt Specific Rules */
-  #receiptModal.modal-printing {
-    position: absolute !important;
-    top: 0;
-    left: 0;
-    right: 0;
-    width: 100%;
-    height: auto !important;
-    background: white !important;
-    box-shadow: none !important;
-    overflow: visible !important;
-    display: block !important;
-    padding: 0 !important;
-    margin: 0 !important;
-  }
-  
-  #receiptModal.modal-printing #receiptCombinedWrapper,
-  #receiptModal.modal-printing #receiptCombinedWrapper * {
-    visibility: visible !important;
-  }
-  
-  #receiptModal.modal-printing #receiptCombinedWrapper {
-    width: 7cm !important;
-    margin: 0 auto !important;
-    padding: 0 !important;
-    font-family: 'Courier New', Courier, monospace !important;
-    box-shadow: none !important;
-    background-color: white !important;
-    font-weight: bold !important;
-    line-height: 1.3 !important;
-  }
-  
-  /* Important - Force receipt-wrapper to be on its own page */
-  #receiptModal.modal-printing .receipt-wrapper {
-    page-break-after: always !important;
-    display: block !important;
-  }
-  
-  /* Make sure shop copy starts on a new page */
-  #receiptModal.modal-printing .shop-copy-content {
-    page-break-before: always !important;
-    display: block !important;
-  }
-  
-  #receiptModal.modal-printing .receipt-body table {
-    width: 100% !important;
-    font-size: 12px !important;
-    border-collapse: collapse !important;
-  }
-  
-  #receiptModal.modal-printing .receipt-body th,
-  #receiptModal.modal-printing .receipt-body td {
-    padding: 2px 4px !important;
-    text-align: left !important;
-  }
-  
-  #receiptModal.modal-printing .receipt-header {
-    padding: 0.5cm 0.3cm 0.3cm !important;
-    text-align: center !important;
-    border-bottom: 1px dashed #999 !important;
-  }
-  
-  #receiptModal.modal-printing .receipt-body {
-    padding: 0.3cm !important;
-  }
-  
-  #receiptModal.modal-printing .totals {
-    padding: 0.3cm !important;
-    font-size: 14px !important;
-    font-weight: bold !important;
-    border-top: 1px dashed #999 !important;
-  }
-  
-  #receiptModal.modal-printing .receipt-footer {
-    padding: 0.3cm !important;
-    font-size: 10px !important;
-    border-top: 1px dashed #999 !important;
-    text-align: center !important;
-  }
-  
-  /* Shop copy section styling */
-  #receiptModal.modal-printing .shop-copy-content {
-    padding: 0.5cm 0.3cm !important;
-    font-family: 'Courier New', monospace !important;
-    text-align: left !important;
-    border-top: none !important; /* Remove border since we're using page break */
-    margin-top: 0 !important;
-  }
-  
-  #receiptModal.modal-printing .shop-copy-content h2 {
-    margin-top: 0 !important;
-    font-size: 14px !important;
-    text-align: center !important;
-    border-bottom: 1px dashed #aaa !important;
-    padding-bottom: 10px !important;
-    margin-bottom: 15px !important;
-  }
-  
-  #receiptModal.modal-printing .copy-details p {
-    margin: 6px 0 !important;
-    font-size: 12px !important;
-  }
-  
-  /* Hide the dotted separation line during printing since we're using page breaks */
-  #receiptModal.modal-printing div[style*="border-top: 2px dashed"] {
-    display: none !important;
-  }
-}
-
-/* Return Receipt Print Styling remains the same */
-@media print {
-  #returnReceiptModal.modal-printing,
-  #returnReceiptModal.modal-printing * {
-    visibility: visible !important;
-  }
-  
-  #returnReceiptModal.modal-printing {
-    position: absolute !important;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background: white !important;
-    box-shadow: none !important;
-    overflow: visible !important;
-    display: block !important;
-    height: auto !important;
-  }
-  
-  #returnReceiptModal.modal-printing .divider {
-    border-top: 1px dashed #000 !important;
-    margin: 10px 0 !important;
-  }
-  
-  #returnReceiptModal.modal-printing .receipt-copy {
-    page-break-after: always !important;
-  }
+  background: #455a64;
 }
