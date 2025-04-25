@@ -101,6 +101,7 @@ function initMultiPaymentModal(cartTotal) {
   }, 50);
 
   attachPaymentListeners();
+  liveCalculateBalance(); // Calculate balance after setting all values
 }
 
 // === Modal Button Wiring ===
@@ -114,6 +115,7 @@ function openPaymentModal() {
   closeModal("customerModal");
   openModal("paymentModal");
   // document.getElementById("paymentModal").style.display = "block";
+  liveCalculateBalance(); // Calculate initial balance
 }
 
 // === Toggle Field Logic ===
@@ -122,7 +124,7 @@ function togglePayField(method) {
   if (!field) return;
   field.style.display = field.style.display === "block" ? "none" : "block";
 }
-function liveCalculateBalance() {
+export function liveCalculateBalance() {
   const cartTotal =
     parseFloat(document.getElementById("multiTotalDue").textContent) || 0;
 
@@ -138,8 +140,12 @@ function liveCalculateBalance() {
     parseFloat(
       document.querySelector(".pay-amount[data-method='voucher']").value
     ) || 0;
+  const exchangeAmount =
+    parseFloat(
+      document.querySelector(".pay-amount[data-method='exchange']").value
+    ) || 0;
 
-  const totalPaid = cashAmount + cardAmount + voucherAmount;
+  const totalPaid = cashAmount + cardAmount + voucherAmount + exchangeAmount;
   const balanceDue = cartTotal - totalPaid;
 
   // ✅ Update values based on cart + entered amounts
