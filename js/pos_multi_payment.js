@@ -12,6 +12,7 @@ export async function validateMultiExchange(id) {
       return null;
     }
 
+    liveCalculateBalance();
     return res.data.total_price;
   } catch (err) {
     console.error("❌ Exchange validation failed:", err);
@@ -25,9 +26,8 @@ export async function handleExchangeIdInput() {
     parseFloat(document.getElementById("cartTotalLabel").textContent) || 0;
 
   if (!id) {
-    document.getElementById("multiExchangeInfo").textContent = "";
-    document.getElementById("multiBalanceDue").textContent =
-      cartTotal.toFixed(2);
+    document.getElementById("multiExchangeInfo").value = "";
+    liveCalculateBalance();
     return;
   }
 
@@ -38,20 +38,15 @@ export async function handleExchangeIdInput() {
 
     if (!res.data.valid) {
       alert(res.data.message || "❌ Invalid or used Exchange ID.");
-      document.getElementById("multiExchangeInfo").textContent = "";
-      document.getElementById("multiBalanceDue").textContent =
-        cartTotal.toFixed(2);
+      document.getElementById("multiExchangeInfo").value = "";
+      liveCalculateBalance();
       return;
     }
 
     const exchangeAmount = parseFloat(res.data.total_price);
-    document.getElementById(
-      "multiExchangeInfo"
-    ).textContent = `Rs ${exchangeAmount.toFixed(2)}`;
-
-    const newBalance = cartTotal - exchangeAmount;
-    document.getElementById("multiBalanceDue").textContent =
-      newBalance.toFixed(2);
+    document.getElementById("multiExchangeInfo").value =
+      exchangeAmount.toFixed(2);
+    liveCalculateBalance();
   } catch (err) {
     console.error("❌ Exchange validation error:", err);
     alert("Failed to validate Exchange ID. Try again.");
@@ -69,7 +64,7 @@ function attachPaymentListeners() {
     .getElementById("cashInValue")
     .addEventListener("input", updateCashPreview);
 }
-// 👉 This ONLY handles cashIn → balance preview
+//This ONLY handles cashIn → balance preview
 function updateCashPreview() {
   const cashIn = parseFloat(document.getElementById("cashInValue").value) || 0;
   const cashAmount =
@@ -114,7 +109,6 @@ function openPaymentModal() {
   initMultiPaymentModal(cartTotal);
   closeModal("customerModal");
   openModal("paymentModal");
-  // document.getElementById("paymentModal").style.display = "block";
   liveCalculateBalance(); // Calculate initial balance
 }
 
@@ -164,7 +158,7 @@ function resetPaymentModal() {
 
   // Reset exchange section
   document.getElementById("multiExchangeId").value = "";
-  document.getElementById("multiExchangeInfo").textContent = "";
+  document.getElementById("multiExchangeInfo").value = "";
   document.getElementById("multiBalanceDue").textContent =
     document.getElementById("cartTotalLabel").textContent || "0.00";
 
