@@ -15,11 +15,9 @@ export async function getPaymentData() {
   const cartTotal = getCartTotal();
   const exchangeId =
     document.getElementById("multiExchangeId")?.value.trim() || null;
-  const exchangeText =
-    document.getElementById("multiExchangeInfo")?.textContent || "";
-  const exchangeAmount = exchangeText.includes("Rs")
-    ? parseFloat(exchangeText.replace(/\D/g, "")) || 0
-    : 0;
+  const exchangeAmount = parseFloat(
+    document.getElementById("multiExchangeInfo")?.value || 0
+  );
 
   const cashAmount = parseFloat(
     document.querySelector(".pay-amount[data-method='cash']")?.value || 0
@@ -78,7 +76,7 @@ export async function finalizePayment() {
     return;
   }
 
-  const { exchangeId, payments, totalPaid } = paymentData;
+  const { exchangeId, exchangeAmount, payments, totalPaid } = paymentData;
   const balanceDue = parseFloat(
     document.getElementById("multiBalanceDue")?.textContent || 0
   );
@@ -165,7 +163,8 @@ export async function finalizePayment() {
       [...cartItems],
       exchangeId,
       balance,
-      payments // Pass payments array for breakdown display
+      payments, // Pass payments array for breakdown display
+      exchangeAmount // Pass exchange amount
     );
 
     // Then clear the cart and reset values

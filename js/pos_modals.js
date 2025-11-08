@@ -188,7 +188,8 @@ export async function renderReceiptAndShopCopy(
   items = [],
   exchangeId = null,
   balance = null,
-  payments = []
+  payments = [],
+  exchangeAmount = 0
 ) {
   const date = new Date();
   const orderNo = String(orderId).padStart(5, "0");
@@ -200,35 +201,77 @@ export async function renderReceiptAndShopCopy(
     document.getElementById("billDiscount")?.value || 0
   );
 
-  // Calculate net amount (before discount)
-  const netAmount = items.reduce((sum, item) => sum + getItemTotal(item), 0);
-  const discountAmount = (netAmount * billDiscount) / 100;
-  const grossAmount = netAmount - discountAmount;
+  // Calculate Gross Amount: Total of (Rate × Qty) for all items (before any discounts)
+  const grossAmount = items.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+
+  // Calculate subtotal after item discounts (before bill discount)
+  const subtotalAfterItemDiscounts = items.reduce(
+    (sum, item) => sum + getItemTotal(item),
+    0
+  );
+
+  // Calculate item-wise discount total
+  const itemDiscountTotal = grossAmount - subtotalAfterItemDiscounts;
+
+  // Calculate bill discount
+  const billDiscountAmount = (subtotalAfterItemDiscounts * billDiscount) / 100;
+
+  // Total discount (item-wise + bill discount)
+  const totalDiscountAmount = itemDiscountTotal + billDiscountAmount;
+
+  // Calculate Net Amount: Gross Amount - Discount Amount - Exchange Amount
+  // This is the final amount the customer needs to pay
+  const netAmount = grossAmount - totalDiscountAmount - (exchangeAmount || 0);
 
   // === Customer Receipt Section ===
   document.getElementById("receiptOrderNumber").textContent = orderNo;
   document.getElementById("receiptCustomerId").textContent = customerName;
   document.getElementById("receiptDate").textContent = dateStr;
   document.getElementById("receiptTime").textContent = timeStr;
-  document.getElementById("receiptPaymentMethod").textContent =
-    paymentMethod.toUpperCase();
+  // Payment Method is now set in the info section below
 
   // Update bill summary
+  // First field: Net Amount (final amount to pay)
   document.getElementById("receiptNetAmount").textContent =
     netAmount.toFixed(2);
-  document.getElementById("receiptDiscountAmount").textContent =
-    discountAmount.toFixed(2);
-  document.getElementById("receiptTotalAmount").textContent =
+
+  // Hide Discount Amount if it's 0
+  const discountAmountEl = document.getElementById(
+    "receiptDiscountAmount"
+  ).parentElement;
+  if (totalDiscountAmount === 0) {
+    discountAmountEl.style.display = "none";
+  } else {
+    discountAmountEl.style.display = "block";
+    document.getElementById("receiptDiscountAmount").textContent =
+      totalDiscountAmount.toFixed(2);
+  }
+
+  // Hide Exchange Amount if it's 0
+  const exchangeAmountEl = document.getElementById(
+    "receiptExchangeAmount"
+  ).parentElement;
+  if (!exchangeAmount || exchangeAmount === 0) {
+    exchangeAmountEl.style.display = "none";
+  } else {
+    exchangeAmountEl.style.display = "block";
+    document.getElementById("receiptExchangeAmount").textContent =
+      exchangeAmount.toFixed(2);
+  }
+
+  // Last field: Gross Amount (Rate*Qty total)
+  document.getElementById("receiptGrossAmount").textContent =
     grossAmount.toFixed(2);
 
   // Line items
   const tbody = document.getElementById("receiptItemRows");
   tbody.innerHTML = "";
   items.forEach((item) => {
-    const discountText =
-      item.discount && item.discount > 0
-        ? `<br><small>Disc: ${item.discount}%</small>`
-        : "";
+    // Hide item-wise discount percentage (keep logic but don't display)
+    const discountText = ""; // Previously showed: `<br><small>Disc: ${item.discount}%</small>`
     const tr = document.createElement("tr");
     tr.innerHTML = `
         <td>${item.name}${discountText}</td>
@@ -239,30 +282,47 @@ export async function renderReceiptAndShopCopy(
     tbody.appendChild(tr);
   });
 
-  // Exchange ID
-  const exchangeInfoEl = document.getElementById("receiptExchangeInfo");
-  exchangeInfoEl.innerHTML = exchangeId
-    ? `<strong>Exchange ID:</strong> #${exchangeId}`
-    : "";
-
-  // Clean up old cash info
+  // Clean up old cash info and payment info
   const totalsEl = document.querySelector(".totals");
   totalsEl.querySelector(".cash-info")?.remove();
+  // Remove old payment method element if it exists
+  const allPElements = totalsEl.querySelectorAll("p");
+  allPElements.forEach((p) => {
+    if (p.querySelector("#receiptPaymentMethod")) {
+      p.remove();
+    }
+  });
 
-  // Cash Info (only for cash payments or multy with cash)
+  // Create info section with Cash In, Balance Given, Exchange ID, and Payment Method
+  const infoSection = document.createElement("div");
+  infoSection.classList.add("cash-info");
+
+  let infoHTML = "";
+
+  // Cash In and Balance Given (only for cash payments or multy with cash)
   if (
     (paymentMethod === "cash" || paymentMethod === "multy") &&
     cashInAmount !== null
   ) {
-    const cashInfo = document.createElement("div");
-    cashInfo.classList.add("cash-info");
     const balanceAmt = balance ?? 0;
-    cashInfo.innerHTML = `
-        <p><strong>Cash In:</strong> Rs ${cashInAmount.toFixed(2)}</p>
-        <p><strong>Balance Given:</strong> Rs ${balanceAmt.toFixed(2)}</p>
-      `;
-    totalsEl.appendChild(cashInfo);
+    infoHTML += `<p><strong>Cash In:</strong> Rs ${cashInAmount.toFixed(
+      2
+    )}</p>`;
+    infoHTML += `<p><strong>Balance Given:</strong> Rs ${balanceAmt.toFixed(
+      2
+    )}</p>`;
   }
+
+  // Exchange ID (only show if exchange amount > 0)
+  if (exchangeId && exchangeAmount && exchangeAmount > 0) {
+    infoHTML += `<p><strong>Exchange ID:</strong> #${exchangeId}</p>`;
+  }
+
+  // Payment Method
+  infoHTML += `<p><strong>Payment Method:</strong> ${paymentMethod.toUpperCase()}</p>`;
+
+  infoSection.innerHTML = infoHTML;
+  totalsEl.appendChild(infoSection);
 
   // === Shop Copy Section ===
   document.getElementById("shopCopyOrderId").textContent = orderNo;
@@ -294,8 +354,35 @@ export async function renderReceiptAndShopCopy(
       ).toFixed(2)}</p>`;
     });
 
+    // Add Exchange ID and Amount if available
+    if (exchangeId) {
+      breakdownHTML += `<p><strong>Exchange ID:</strong> #${exchangeId}</p>`;
+      if (exchangeAmount > 0) {
+        breakdownHTML += `<p><strong>Exchange Amount:</strong> Rs ${exchangeAmount.toFixed(
+          2
+        )}</p>`;
+      }
+    }
+
     breakdownDiv.innerHTML = breakdownHTML;
     shopWrap.appendChild(breakdownDiv);
+  } else if (exchangeId) {
+    // Show exchange info even if not multy payment
+    const exchangeDiv = document.createElement("div");
+    exchangeDiv.classList.add("shop-payment-breakdown");
+    exchangeDiv.style.marginTop = "10px";
+    exchangeDiv.style.paddingTop = "10px";
+    exchangeDiv.style.borderTop = "1px solid #ccc";
+
+    let exchangeHTML = `<p><strong>Exchange ID:</strong> #${exchangeId}</p>`;
+    if (exchangeAmount > 0) {
+      exchangeHTML += `<p><strong>Exchange Amount:</strong> Rs ${exchangeAmount.toFixed(
+        2
+      )}</p>`;
+    }
+
+    exchangeDiv.innerHTML = exchangeHTML;
+    shopWrap.appendChild(exchangeDiv);
   }
 
   if (

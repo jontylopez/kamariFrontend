@@ -296,6 +296,14 @@ header a:hover {
   font-weight: 600;
 }
 
+.receipt-header .contact-info {
+  margin: 2px 0;
+  font-size: 11px;
+  line-height: 1.2;
+  font-weight: 600;
+  text-align: center;
+}
+
 .receipt-body {
   padding: 5px 0;
 }
@@ -311,12 +319,18 @@ header a:hover {
 .receipt-table th,
 .receipt-table td {
   padding: 2px 3px;
-  text-align: left;
+  text-align: center;
   font-weight: 600;
 }
 
 .receipt-table th {
   border-bottom: 1px solid #000;
+  padding-bottom: 15px;
+  text-align: center;
+}
+
+.receipt-table tbody tr:first-child td {
+  padding-top: 6px;
 }
 
 .totals {
@@ -353,43 +367,22 @@ header a:hover {
   padding-left: 5px;
 }
 
-/* Make Gross Amount stand out */
+/* Net Amount should have same styling as Gross Amount */
 .bill-summary p:last-of-type {
-  font-weight: bold;
-  margin-top: 8px;
-  padding-top: 5px;
-  border-top: 1px dashed #ccc;
-}
-
-.bill-summary p:last-of-type strong {
-  font-size: 16px;
-  color: #2e7d32;
-  font-weight: bold;
-}
-
-.bill-summary p:last-of-type span {
-  font-size: 14px;
-  color: #2e7d32;
-  min-width: 70px;
-  font-weight: bold;
+  margin-top: 2px;
+  padding-top: 0;
 }
 
 /* Ensure consistent alignment for all amount displays */
-#receiptNetAmount,
+#receiptGrossAmount,
 #receiptBillDiscount,
-#receiptDiscountAmount {
+#receiptDiscountAmount,
+#receiptExchangeAmount,
+#receiptNetAmount {
   display: inline-block;
   text-align: right;
   min-width: 60px;
   font-size: 11px;
-}
-
-#receiptTotalAmount {
-  display: inline-block;
-  text-align: right;
-  min-width: 70px;
-  font-weight: bold;
-  font-size: 14px;
 }
 
 /* Add Rs symbol styling */
@@ -398,11 +391,6 @@ header a:hover {
   font-weight: normal;
 }
 
-.bill-summary p:last-of-type span::before {
-  content: "Rs ";
-  font-weight: bold;
-  font-size: 14px;
-}
 
 .receipt-footer {
   padding: 6px 0;

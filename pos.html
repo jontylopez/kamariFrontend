@@ -292,6 +292,10 @@
           <!-- HEADER -->
           <div class="receipt-header">
             <img src="images/bill-logo.png" class="logo" />
+            <div class="contact-info">
+              No 558, Highlevel Road, Pannipitiya<br />
+              Tel: +94703360222 | Email: kamariluxury@gmail.com
+            </div>
             <p>
               <strong>Order:</strong> #<span id="receiptOrderNumber"></span>
             </p>
@@ -324,8 +328,8 @@
           <div class="totals">
             <div class="bill-summary">
               <p>
-                <strong>Net Amount:</strong>
-                <span id="receiptNetAmount">0.00</span>
+                <strong>Gross Amount:</strong>
+                <span id="receiptGrossAmount">0.00</span>
               </p>
 
               <p>
@@ -333,15 +337,21 @@
                 <span id="receiptDiscountAmount">0.00</span>
               </p>
               <p>
-                <strong>Gross Amount:</strong>
-                <span id="receiptTotalAmount">0.00</span>
+                <strong>Exchange Amount:</strong>
+                <span id="receiptExchangeAmount">0.00</span>
+              </p>
+              <div
+                style="
+                  border-top: 1px dashed #ccc;
+                  margin: 4px 0 2px 0;
+                  padding-top: 0;
+                "
+              ></div>
+              <p>
+                <strong>Net Amount:</strong>
+                <span id="receiptNetAmount">0.00</span>
               </p>
             </div>
-            <div id="receiptExchangeInfo" style="margin-bottom: 10px"></div>
-            <p>
-              <strong>Payment Method:</strong>
-              <span id="receiptPaymentMethod"></span>
-            </p>
           </div>
 
           <!-- FOOTER -->
@@ -352,10 +362,6 @@
               WITH RECEIPT, IF PRODUCT IS IN ORIGINAL CONDITION.<br />
               PURCHASES ARE NON REFUNDABLE.<br />
               ITEMS PURCHASED ON DISCOUNT ARE NOT ELIGIBLE FOR EXCHANGE.
-            </div>
-            <div class="contact-info">
-              No 558, Highlevel Road, Pannipitiya<br />
-              Tel: +94703360222 | Email: kamariluxury@gmail.com
             </div>
             <div class="receipt-social">
               <img src="images/icons/fb.png" alt="Facebook" />
