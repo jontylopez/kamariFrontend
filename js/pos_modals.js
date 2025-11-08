@@ -238,26 +238,22 @@ export async function renderReceiptAndShopCopy(
   document.getElementById("receiptNetAmount").textContent =
     netAmount.toFixed(2);
 
-  // Hide Discount Amount if it's 0
-  const discountAmountEl = document.getElementById(
-    "receiptDiscountAmount"
-  ).parentElement;
+  // Hide Discount Amount row if it's 0
+  const discountAmountRow = document.getElementById("discountAmountRow");
   if (totalDiscountAmount === 0) {
-    discountAmountEl.style.display = "none";
+    discountAmountRow.style.display = "none";
   } else {
-    discountAmountEl.style.display = "block";
+    discountAmountRow.style.display = "table-row";
     document.getElementById("receiptDiscountAmount").textContent =
       totalDiscountAmount.toFixed(2);
   }
 
-  // Hide Exchange Amount if it's 0
-  const exchangeAmountEl = document.getElementById(
-    "receiptExchangeAmount"
-  ).parentElement;
+  // Hide Exchange Amount row if it's 0
+  const exchangeAmountRow = document.getElementById("exchangeAmountRow");
   if (!exchangeAmount || exchangeAmount === 0) {
-    exchangeAmountEl.style.display = "none";
+    exchangeAmountRow.style.display = "none";
   } else {
-    exchangeAmountEl.style.display = "block";
+    exchangeAmountRow.style.display = "table-row";
     document.getElementById("receiptExchangeAmount").textContent =
       exchangeAmount.toFixed(2);
   }
@@ -297,7 +293,7 @@ export async function renderReceiptAndShopCopy(
   const infoSection = document.createElement("div");
   infoSection.classList.add("cash-info");
 
-  let infoHTML = "";
+  let infoHTML = '<table class="cash-info-table"><tbody>';
 
   // Cash In and Balance Given (only for cash payments or multy with cash)
   if (
@@ -305,22 +301,31 @@ export async function renderReceiptAndShopCopy(
     cashInAmount !== null
   ) {
     const balanceAmt = balance ?? 0;
-    infoHTML += `<p><strong>Cash In:</strong> Rs ${cashInAmount.toFixed(
-      2
-    )}</p>`;
-    infoHTML += `<p><strong>Balance Given:</strong> Rs ${balanceAmt.toFixed(
-      2
-    )}</p>`;
+    infoHTML += `<tr>
+      <td><strong>Cash In:</strong></td>
+      <td class="amount-cell">Rs ${cashInAmount.toFixed(2)}</td>
+    </tr>`;
+    infoHTML += `<tr>
+      <td><strong>Balance Given:</strong></td>
+      <td class="amount-cell">Rs ${balanceAmt.toFixed(2)}</td>
+    </tr>`;
   }
 
   // Exchange ID (only show if exchange amount > 0)
   if (exchangeId && exchangeAmount && exchangeAmount > 0) {
-    infoHTML += `<p><strong>Exchange ID:</strong> #${exchangeId}</p>`;
+    infoHTML += `<tr>
+      <td><strong>Exchange ID:</strong></td>
+      <td>#${exchangeId}</td>
+    </tr>`;
   }
 
   // Payment Method
-  infoHTML += `<p><strong>Payment Method:</strong> ${paymentMethod.toUpperCase()}</p>`;
+  infoHTML += `<tr>
+    <td><strong>Payment Method:</strong></td>
+    <td>${paymentMethod.toUpperCase()}</td>
+  </tr>`;
 
+  infoHTML += "</tbody></table>";
   infoSection.innerHTML = infoHTML;
   totalsEl.appendChild(infoSection);
 

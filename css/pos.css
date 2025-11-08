@@ -341,36 +341,51 @@ header a:hover {
 
 .bill-summary {
   background: #f9f9f9;
-  padding: 6px;
+  padding: 6px 0 6px 6px;
   border-radius: 4px;
   margin: 6px 0;
   font-size: 11px;
   font-weight: 600;
 }
 
-.bill-summary p {
-  margin: 3px 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
+.bill-summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+  padding: 0;
 }
 
-.bill-summary p strong {
-  flex: 1;
+.bill-summary-table td {
+  padding: 4px 0;
+  vertical-align: baseline;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.bill-summary-table td:first-child {
   text-align: left;
 }
 
-.bill-summary p span {
-  flex: 0 0 auto;
+.bill-summary-table .amount-cell {
   text-align: right;
-  min-width: 60px;
-  padding-left: 5px;
+  padding-left: 10px;
+  min-width: 130px;
+  width: 130px;
 }
 
-/* Net Amount should have same styling as Gross Amount */
-.bill-summary p:last-of-type {
-  margin-top: 2px;
-  padding-top: 0;
+.bill-summary-table td:last-child {
+  text-align: right;
+  padding-left: 10px;
+  min-width: 130px;
+  width: 130px;
+}
+
+.bill-summary-table .separator-row td {
+  padding: 4px 0 2px 0;
+}
+
+.bill-summary-table tr:last-child td {
+  padding-top: 2px;
 }
 
 /* Ensure consistent alignment for all amount displays */
@@ -381,12 +396,13 @@ header a:hover {
 #receiptNetAmount {
   display: inline-block;
   text-align: right;
-  min-width: 60px;
+  min-width: 130px;
   font-size: 11px;
+  width: 130px;
 }
 
 /* Add Rs symbol styling */
-.bill-summary p span::before {
+.bill-summary-table .amount-cell::before {
   content: "Rs ";
   font-weight: normal;
 }
@@ -464,12 +480,34 @@ header a:hover {
   margin: 8px 0;
 }
 
-.cash-info p {
-  margin: 4px 0;
-  display: flex;
-  justify-content: space-between;
+.cash-info-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.cash-info-table td {
+  padding: 4px 0;
+  vertical-align: baseline;
   font-size: 12px;
   font-weight: 600;
+}
+
+.cash-info-table td:first-child {
+  text-align: left;
+}
+
+.cash-info-table td:last-child {
+  text-align: right;
+  padding-left: 10px;
+  min-width: 130px;
+  width: 130px;
+}
+
+.cash-info-table .amount-cell {
+  text-align: right;
+  padding-left: 10px;
+  min-width: 130px;
+  width: 130px;
 }
 
 /* Common print settings */

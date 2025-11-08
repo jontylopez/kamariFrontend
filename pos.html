@@ -327,30 +327,31 @@
 
           <div class="totals">
             <div class="bill-summary">
-              <p>
-                <strong>Gross Amount:</strong>
-                <span id="receiptGrossAmount">0.00</span>
-              </p>
-
-              <p>
-                <strong>Discount Amount:</strong>
-                <span id="receiptDiscountAmount">0.00</span>
-              </p>
-              <p>
-                <strong>Exchange Amount:</strong>
-                <span id="receiptExchangeAmount">0.00</span>
-              </p>
-              <div
-                style="
-                  border-top: 1px dashed #ccc;
-                  margin: 4px 0 2px 0;
-                  padding-top: 0;
-                "
-              ></div>
-              <p>
-                <strong>Net Amount:</strong>
-                <span id="receiptNetAmount">0.00</span>
-              </p>
+              <table class="bill-summary-table">
+                <tr>
+                  <td><strong>Gross Amount:</strong></td>
+                  <td class="amount-cell" id="receiptGrossAmount">0.00</td>
+                </tr>
+                <tr id="discountAmountRow">
+                  <td><strong>Discount Amount:</strong></td>
+                  <td class="amount-cell" id="receiptDiscountAmount">0.00</td>
+                </tr>
+                <tr id="exchangeAmountRow">
+                  <td><strong>Exchange Amount:</strong></td>
+                  <td class="amount-cell" id="receiptExchangeAmount">0.00</td>
+                </tr>
+                <tr class="separator-row">
+                  <td colspan="2">
+                    <div
+                      style="border-top: 1px dashed #ccc; margin: 4px 0 2px 0"
+                    ></div>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>Net Amount:</strong></td>
+                  <td class="amount-cell" id="receiptNetAmount">0.00</td>
+                </tr>
+              </table>
             </div>
           </div>
 
