@@ -187,7 +187,8 @@ export async function renderReceiptAndShopCopy(
   totalAmount = null,
   items = [],
   exchangeId = null,
-  balance = null
+  balance = null,
+  payments = []
 ) {
   const date = new Date();
   const orderNo = String(orderId).padStart(5, "0");
@@ -274,6 +275,28 @@ export async function renderReceiptAndShopCopy(
   const shopWrap = document.querySelector(".copy-details");
   document.getElementById("shopCopyCashInWrap").style.display = "none";
   shopWrap.querySelector(".shop-balance-info")?.remove();
+  shopWrap.querySelector(".shop-payment-breakdown")?.remove();
+
+  // Show payment breakdown for multy payments
+  if (paymentMethod === "multy" && payments && payments.length > 0) {
+    const breakdownDiv = document.createElement("div");
+    breakdownDiv.classList.add("shop-payment-breakdown");
+    breakdownDiv.style.marginTop = "10px";
+    breakdownDiv.style.paddingTop = "10px";
+    breakdownDiv.style.borderTop = "1px solid #ccc";
+
+    let breakdownHTML = "";
+    payments.forEach((payment) => {
+      const methodName =
+        payment.method.charAt(0).toUpperCase() + payment.method.slice(1);
+      breakdownHTML += `<p><strong>${methodName}:</strong> Rs ${parseFloat(
+        payment.amount
+      ).toFixed(2)}</p>`;
+    });
+
+    breakdownDiv.innerHTML = breakdownHTML;
+    shopWrap.appendChild(breakdownDiv);
+  }
 
   if (
     (paymentMethod === "cash" || paymentMethod === "multy") &&

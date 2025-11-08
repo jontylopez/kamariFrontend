@@ -164,7 +164,8 @@ export async function finalizePayment() {
       orderTotal,
       [...cartItems],
       exchangeId,
-      balance
+      balance,
+      payments // Pass payments array for breakdown display
     );
 
     // Then clear the cart and reset values

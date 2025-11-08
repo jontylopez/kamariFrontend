@@ -256,7 +256,8 @@ header a:hover {
   background: white;
   width: 80mm;
   margin: 10px auto;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: 'Consolas', 'Monaco', 'Menlo', 'Lucida Console', 'DejaVu Sans Mono', 'Courier New', Courier, monospace;
+  font-weight: 600;
   box-shadow: none;
 }
 
@@ -292,6 +293,7 @@ header a:hover {
   margin: 2px 0; /* Reduce top/bottom spacing */
   font-size: 11px;
   line-height: 1.2;
+  font-weight: 600;
 }
 
 .receipt-body {
@@ -303,12 +305,14 @@ header a:hover {
   border-collapse: collapse;
   margin: 6px 0;
   font-size: 11px;
+  font-weight: 600;
 }
 
 .receipt-table th,
 .receipt-table td {
   padding: 2px 3px;
   text-align: left;
+  font-weight: 600;
 }
 
 .receipt-table th {
@@ -327,6 +331,7 @@ header a:hover {
   border-radius: 4px;
   margin: 6px 0;
   font-size: 11px;
+  font-weight: 600;
 }
 
 .bill-summary p {
@@ -405,6 +410,7 @@ header a:hover {
   text-align: center;
   border-top: 1px dashed #999;
   margin-top: 10px;
+  font-weight: 600;
 }
 
 .receipt-footer .thank-you {
@@ -436,6 +442,7 @@ header a:hover {
   border-top: 2px dashed #000;
   margin-top: 10px;
   font-size: 12px;
+  font-weight: 600;
 }
 
 .shop-copy-content h2 {
@@ -448,6 +455,17 @@ header a:hover {
 
 .copy-details p {
   margin: 6px 0;
+  font-weight: 600;
+}
+
+.shop-balance-info,
+.shop-payment-breakdown {
+  font-weight: 600;
+}
+
+.shop-payment-breakdown p {
+  margin: 4px 0;
+  font-weight: 600;
 }
 
 /* Cash Info Styling */
@@ -463,6 +481,7 @@ header a:hover {
   display: flex;
   justify-content: space-between;
   font-size: 12px;
+  font-weight: 600;
 }
 
 /* Common print settings */
@@ -837,7 +856,8 @@ header a:hover {
   background: white;
   width: 80mm;
   margin: 20px auto;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: 'Consolas', 'Monaco', 'Menlo', 'Lucida Console', 'DejaVu Sans Mono', 'Courier New', Courier, monospace;
+  font-weight: 600;
   box-shadow: 0 0 10px rgba(0,0,0,0.2);
   padding: 15px;
 }
@@ -860,6 +880,7 @@ header a:hover {
   margin: 8px 0;
   font-size: 12px;
   line-height: 1.4;
+  font-weight: 600;
 }
 
 .receipt-copy hr {
