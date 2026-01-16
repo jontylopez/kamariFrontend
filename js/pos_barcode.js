@@ -111,6 +111,14 @@ export async function handleExchangeBarcodeScan(e) {
       return;
     }
 
+    // Filter for available stock (quantity > 0) for returns/exchanges
+    const validStocks = stockMovements.filter((stock) => stock.quantity > 0);
+
+    if (validStocks.length === 0) {
+      alert("❌ No available stock for this item.");
+      return;
+    }
+
     const handleSelect = (stock) => {
       const exchangeItems = getExchangeItems();
       const existing = exchangeItems.find(
@@ -137,10 +145,11 @@ export async function handleExchangeBarcodeScan(e) {
       renderExchangeItems();
     };
 
-    if (stockMovements.length === 1) {
-      handleSelect(stockMovements[0]);
+    // Show modal if there are multiple stock options (same logic as handleBarcodeScan)
+    if (validStocks.length === 1) {
+      handleSelect(validStocks[0]);
     } else {
-      showPriceSelectionModal(inventory.name, stockMovements, handleSelect);
+      showPriceSelectionModal(inventory.name, validStocks, handleSelect);
     }
   } catch (err) {
     console.error("❌ Error scanning for return:", err);
