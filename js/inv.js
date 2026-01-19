@@ -362,12 +362,16 @@ async function openRestockModal(invId) {
     modal.style.display = "flex";
   };
 
-  if (relevantStocks.length === 1) {
-    loadRestockForm(relevantStocks[0]); 
-  } else if (relevantStocks.length > 1) {
+  // Check for unique prices (including items with 0 quantity) to determine if modal is needed
+  const uniquePrices = [...new Set(relevantStocks.map((s) => parseFloat(s.sell_price).toFixed(2)))];
+
+  if (uniquePrices.length > 1) {
+    // Multiple unique prices - show modal to select which stock entry to restock
     showPriceSelectionModal(relevantStocks, (selected) => {
       loadRestockForm(selected); 
     });
+  } else if (relevantStocks.length === 1) {
+    loadRestockForm(relevantStocks[0]); 
   } else {
     loadRestockForm(); 
   }
@@ -438,7 +442,22 @@ async function loadInventoryForEdit(id) {
   const buyField = document.getElementById("inventoryBuyPrice");
   const sellField = document.getElementById("inventorySellPrice");
 
-  if (relevantStocks.length === 1) {
+  // Check for unique prices (including items with 0 quantity) to determine if modal is needed
+  const uniquePrices = [...new Set(relevantStocks.map((s) => parseFloat(s.sell_price).toFixed(2)))];
+
+  if (uniquePrices.length > 1) {
+    // Multiple unique prices - show modal to select which stock entry to edit
+    showPriceSelectionModal(relevantStocks, (chosenStock) => {
+      qtyField.value = chosenStock.quantity;
+      buyField.value = chosenStock.buy_price;
+      sellField.value = chosenStock.sell_price;
+      qtyField.disabled = false;
+      buyField.disabled = false;
+      sellField.disabled = false;
+
+      prepareUpdateButton(inv.id, chosenStock.id);
+    });
+  } else if (relevantStocks.length === 1) {
     const stock = relevantStocks[0];
     qtyField.value = stock.quantity;
     buyField.value = stock.buy_price;
@@ -450,17 +469,10 @@ async function loadInventoryForEdit(id) {
     // Attach to update
     prepareUpdateButton(inv.id, stock.id);
   } else {
-    // Multiple stock options → prompt selection
-    showPriceSelectionModal(relevantStocks, (chosenStock) => {
-      qtyField.value = chosenStock.quantity;
-      buyField.value = chosenStock.buy_price;
-      sellField.value = chosenStock.sell_price;
-      qtyField.disabled = false;
-      buyField.disabled = false;
-      sellField.disabled = false;
-
-      prepareUpdateButton(inv.id, chosenStock.id);
-    });
+    // No stock entries - fields remain disabled
+    qtyField.disabled = true;
+    buyField.disabled = true;
+    sellField.disabled = true;
   }
   // Hide original button
   document.querySelector("button[type='submit']").style.display = "none";
@@ -582,16 +594,16 @@ async function openDownloadModal(barcode, inventoryName, defaultPrice, size) {
   const inventory = allInventory.find((inv) => inv.b_code_id === barcode);
 
   const { data: stockList } = await axios.get(`${stockApi}/by-inventory/${inventory.id}`);
-const matchingPrices = stockList
-  .filter((s) => s.quantity > 0)
-  .map((s) => s.sell_price);
-
-  const uniquePrices = [...new Set(matchingPrices.map((p) => parseFloat(p)))];
+  
+  // Check for unique prices across ALL stock entries (including 0 quantity) for price comparison
+  const uniquePrices = [...new Set(stockList.map((s) => parseFloat(s.sell_price).toFixed(2)))];
 
   const safeName = inventoryName.replace(/'/g, "’");
 
   if (uniquePrices.length > 1) {
-    showPriceSelectionModal(uniquePrices, (selectedPrice) => {
+    // Multiple unique prices - show modal with all stock entries (including 0 quantity)
+    // But only show prices, not full stock objects
+    showPriceSelectionModal(uniquePrices.map(p => parseFloat(p)), (selectedPrice) => {
       showBarcodeLabel(barcode, safeName, selectedPrice, size);
     });
   } else {

@@ -111,14 +111,6 @@ export async function handleExchangeBarcodeScan(e) {
       return;
     }
 
-    // Filter for available stock (quantity > 0) for returns/exchanges
-    const validStocks = stockMovements.filter((stock) => stock.quantity > 0);
-
-    if (validStocks.length === 0) {
-      alert("❌ No available stock for this item.");
-      return;
-    }
-
     const handleSelect = (stock) => {
       const exchangeItems = getExchangeItems();
       const existing = exchangeItems.find(
@@ -145,11 +137,20 @@ export async function handleExchangeBarcodeScan(e) {
       renderExchangeItems();
     };
 
-    // Show modal if there are multiple stock options (same logic as handleBarcodeScan)
-    if (validStocks.length === 1) {
-      handleSelect(validStocks[0]);
+    // Check for unique prices across ALL stock entries (including 0 quantity) for price comparison
+    // Items can be returned even if currently sold out (quantity = 0)
+    const uniquePrices = [...new Set(stockMovements.map((s) => parseFloat(s.sell_price).toFixed(2)))];
+
+    // Show modal if there are multiple unique prices, or if there are multiple stock entries
+    if (uniquePrices.length > 1) {
+      // Multiple unique prices - show modal to select which stock entry
+      showPriceSelectionModal(inventory.name, stockMovements, handleSelect);
+    } else if (stockMovements.length === 1) {
+      // Single stock entry - add directly
+      handleSelect(stockMovements[0]);
     } else {
-      showPriceSelectionModal(inventory.name, validStocks, handleSelect);
+      // Multiple stock entries but same price - still show modal to let user choose which entry
+      showPriceSelectionModal(inventory.name, stockMovements, handleSelect);
     }
   } catch (err) {
     console.error("❌ Error scanning for return:", err);
